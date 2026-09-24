@@ -90,6 +90,7 @@ export const createMasterTrek = async (
                   day.distanceKm,
                 duration: day.duration,
                 altitude: day.altitude,
+                imageUrls: day.imageUrls,
                 activityIds:
                   activities.map(
                     (activity) =>
@@ -379,6 +380,7 @@ export const updateMasterTrekService = async (
                           day.duration,
                         altitude:
                           day.altitude,
+                          imageUrls: day.imageUrls,
                         activityIds:
                           activities.map(
                             (activity) =>

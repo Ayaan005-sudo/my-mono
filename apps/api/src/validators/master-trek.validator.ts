@@ -49,6 +49,16 @@ export const TrekItineraryDayInputSchema = z.object({
     example: 2780,
   }),
 
+  imageUrls: z
+  .array(z.string().url())
+  .default([])
+  .openapi({
+    example: [
+      "https://res.cloudinary.com/demo/image/upload/day-1-1.jpg",
+      "https://res.cloudinary.com/demo/image/upload/day-1-2.jpg",
+    ],
+  }),
+
   activities: z
     .array(ActivityInputSchema)
     .default([])
@@ -126,6 +136,12 @@ export const TrekRouteInputSchema = z.object({
           distanceKm: 4,
           duration: "4 hours",
           altitude: 2780,
+
+            imageUrls: [
+      "https://res.cloudinary.com/demo/image/upload/day-1-1.jpg",
+      "https://res.cloudinary.com/demo/image/upload/day-1-2.jpg",
+    ],
+
           activities: [
             {
               name: "Camping",
@@ -358,6 +374,12 @@ export const CreateMasterTrekSchema = z.object({
               distanceKm: 4,
               duration: "4 hours",
               altitude: 2780,
+
+
+    imageUrls: [
+      "https://res.cloudinary.com/demo/image/upload/day-1-1.jpg",
+      "https://res.cloudinary.com/demo/image/upload/day-1-2.jpg",
+    ],
 
               activities: [
                 {
