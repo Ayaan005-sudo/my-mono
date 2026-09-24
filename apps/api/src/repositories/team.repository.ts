@@ -1,6 +1,6 @@
 import { prisma } from "../utils/prisma.js";
 import { uuidv7 } from "uuidv7";
-import type { CreateTeamInput, CreateTeamResponse } from "../types/index.js";
+import type { CreateTeamInput, CreateTeamResponse, MyTeamInvitation } from "../types/index.js";
 
 export const createTeam = async (
   data: CreateTeamInput,
@@ -222,6 +222,50 @@ export const findPendingTeamInvitationByEmail = async (
       teamId,
       email,
       status: "PENDING",
+    },
+  });
+};
+
+
+
+
+export const getMyPendingTeamInvitations = async (
+  userId: string,
+): Promise<MyTeamInvitation[]> => {
+  return prisma.teamInvitation.findMany({
+    where: {
+      invitedUserId: userId,
+      status: "PENDING",
+    },
+
+    select: {
+      id: true,
+      status: true,
+      createdAt: true,
+      expiresAt: true,
+
+      team: {
+        select: {
+          id: true,
+          name: true,
+          logoUrl: true,
+          city: true,
+          state: true,
+          country: true,
+        },
+      },
+
+      invitedBy: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+
+    orderBy: {
+      createdAt: "desc",
     },
   });
 };

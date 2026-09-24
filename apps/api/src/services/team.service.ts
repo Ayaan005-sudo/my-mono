@@ -1,7 +1,7 @@
 import { sendVendorOnboardingInvitationEmail } from "../lib/email.service.js";
 import { findVendorProfileByUserId } from "../repositories/onboarding.repository.js";
-import { createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamMember, findUserByEmail, searchApprovedVendors } from "../repositories/team.repository.js";
-import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, TeamInvitationResponse, TeamVendorSearchResult, VendorOnboardingInvitationResponse } from "../types/index.js";
+import { createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamMember, findUserByEmail, getMyPendingTeamInvitations, searchApprovedVendors } from "../repositories/team.repository.js";
+import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamInvitationResponse, TeamVendorSearchResult, VendorOnboardingInvitationResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 export const createTeamService = async (
@@ -211,4 +211,11 @@ export const inviteVendorOnboardingService = async (
   );
 
   return invitation;
+};
+
+
+export const getMyTeamInvitationsService = async (
+  userId: string,
+): Promise<MyTeamInvitation[]> => {
+  return getMyPendingTeamInvitations(userId);
 };

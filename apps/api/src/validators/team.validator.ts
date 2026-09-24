@@ -85,3 +85,13 @@ export const InviteVendorOnboardingSchema = z.object({
       example: "someone@gmail.com",
     }),
 });
+
+
+export const TeamInvitationParamSchema = z.object({
+  invitationId: z
+    .string()
+    .min(1, "Invitation ID is required")
+    .openapi({
+      example: "01a0c342-08b0-74c6-985d-3c384a5a17a8",
+    }),
+});

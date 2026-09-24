@@ -63,3 +63,26 @@ export type VendorOnboardingInvitationResponse = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+
+export type MyTeamInvitation = {
+  id: string;
+  status: string;
+  createdAt: Date;
+  expiresAt: Date | null;
+
+  team: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+    city: string | null;
+    state: string | null;
+    country: string | null;
+  };
+
+  invitedBy: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+};

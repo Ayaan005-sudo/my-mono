@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { createTeam, inviteTeamVendorController, inviteVendorOnboardingController, searchTeamVendorsController } from "../controllers/team.controller.js";
+import { createTeam, getMyTeamInvitationsController, inviteTeamVendorController, inviteVendorOnboardingController, searchTeamVendorsController } from "../controllers/team.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
 import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
 
@@ -371,3 +371,66 @@ teamRoutes.openapi(
 
   inviteVendorOnboardingController as any,
 );
+
+teamRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/invitations/me",
+    tags: ["Team"],
+    summary: "Get my pending team invitations",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Team invitations fetched successfully",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Forbidden",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch team invitations",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  getMyTeamInvitationsController as any,
+);
+
