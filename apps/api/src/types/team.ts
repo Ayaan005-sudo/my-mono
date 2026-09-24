@@ -1,4 +1,4 @@
-import type { CreateTeamSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
+import type { CreateTeamSchema, InviteTeamVendorSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
 import type z from "zod";
 
 export type CreateTeamResponse = {
@@ -30,4 +30,20 @@ export type TeamVendorSearchResult = {
 
   vendorType: string | null;
   experienceYears: number | null;
+};
+
+
+export type InviteTeamVendorInput = z.infer<
+  typeof InviteTeamVendorSchema
+>;
+
+export type TeamInvitationResponse = {
+  id: string;
+  teamId: string;
+  invitedUserId: string | null;
+  email: string;
+  invitedByUserId: string;
+  status: string;
+  expiresAt: Date | null;
+  createdAt: Date;
 };

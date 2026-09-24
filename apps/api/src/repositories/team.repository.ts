@@ -92,3 +92,80 @@ export const searchApprovedVendors = async (
 };
 
 
+export const findTeamById = async (teamId: string) => {
+  return prisma.team.findUnique({
+    where: {
+      id: teamId,
+    },
+  });
+};
+
+export const findTeamMember = async (
+  teamId: string,
+  userId: string,
+) => {
+  return prisma.teamMember.findUnique({
+    where: {
+      teamId_userId: {
+        teamId,
+        userId,
+      },
+    },
+  });
+};
+
+export const findApprovedVendorById = async (
+  userId: string,
+) => {
+  return prisma.user.findFirst({
+    where: {
+      id: userId,
+      role: "VENDOR",
+      status: "ACTIVE",
+      isDeleted: false,
+
+      vendorProfile: {
+        is: {
+          verificationStatus: "APPROVED",
+        },
+      },
+    },
+
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  });
+};
+
+export const findPendingTeamInvitation = async (
+  teamId: string,
+  invitedUserId: string,
+) => {
+  return prisma.teamInvitation.findFirst({
+    where: {
+      teamId,
+      invitedUserId,
+      status: "PENDING",
+    },
+  });
+};
+
+export const createTeamInvitation = async (
+  teamId: string,
+  invitedUserId: string,
+  email: string,
+  invitedByUserId: string,
+) => {
+  return prisma.teamInvitation.create({
+    data: {
+      id:uuidv7(),
+      teamId,
+      invitedUserId,
+      email,
+      invitedByUserId,
+      status: "PENDING",
+    },
+  });
+};

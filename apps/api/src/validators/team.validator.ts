@@ -67,3 +67,12 @@ export const SearchTeamVendorQuerySchema = z.object({
       example: 10,
     }),
 });
+
+export const InviteTeamVendorSchema = z.object({
+  invitedUserId: z
+    .string()
+    .min(1, "Vendor user ID is required")
+    .openapi({
+      example: "019abc123vendor",
+    }),
+});

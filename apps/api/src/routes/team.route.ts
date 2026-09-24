@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { createTeam, searchTeamVendorsController } from "../controllers/team.controller.js";
+import { createTeam, inviteTeamVendorController, searchTeamVendorsController } from "../controllers/team.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { CreateTeamSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
+import { CreateTeamSchema, InviteTeamVendorSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
 
 export const teamRoutes = new OpenAPIHono();
 
@@ -160,4 +160,109 @@ teamRoutes.openapi(
   }),
 
   searchTeamVendorsController as any,
+);
+
+teamRoutes.openapi(
+  createRoute({
+    method: "post",
+    path: "/{teamId}/invitations",
+
+    tags: ["Team"],
+
+    summary: "Invite an approved vendor to team",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        teamId: z.string().min(1).openapi({
+          example: "019abc123team",
+        }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema: InviteTeamVendorSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      201: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description: "Team invitation sent successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid request",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Only team owner can invite members",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Team or approved vendor not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Vendor already invited or already a member",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Failed to send team invitation",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  inviteTeamVendorController as any,
 );
