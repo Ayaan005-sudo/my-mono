@@ -1,7 +1,7 @@
 import { sendVendorOnboardingInvitationEmail } from "../lib/email.service.js";
 import { findVendorProfileByUserId } from "../repositories/onboarding.repository.js";
-import { createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamMember, findUserByEmail, getMyPendingTeamInvitations, searchApprovedVendors } from "../repositories/team.repository.js";
-import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamInvitationResponse, TeamVendorSearchResult, VendorOnboardingInvitationResponse } from "../types/index.js";
+import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findUserByEmail, getMyPendingTeamInvitations, rejectTeamInvitation, searchApprovedVendors } from "../repositories/team.repository.js";
+import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamInvitationActionResponse, TeamInvitationResponse, TeamVendorSearchResult, VendorOnboardingInvitationResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 export const createTeamService = async (
@@ -219,3 +219,98 @@ export const getMyTeamInvitationsService = async (
 ): Promise<MyTeamInvitation[]> => {
   return getMyPendingTeamInvitations(userId);
 };
+
+export const acceptTeamInvitationService = async (
+  userId: string,
+  invitationId: string,
+): Promise<TeamInvitationActionResponse> => {
+  const invitation =
+    await findTeamInvitationById(invitationId);
+
+  if (!invitation) {
+    throw new CustomError(
+      "Team invitation not found",
+      404,
+    );
+  }
+
+  if (invitation.invitedUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to accept this invitation",
+      403,
+    );
+  }
+
+  if (invitation.status !== "PENDING") {
+    throw new CustomError(
+      "Only pending invitations can be accepted",
+      400,
+    );
+  }
+
+  if (
+    invitation.expiresAt &&
+    invitation.expiresAt < new Date()
+  ) {
+    throw new CustomError(
+      "Team invitation has expired",
+      400,
+    );
+  }
+
+  const existingMember =
+    await findTeamMember(
+      invitation.teamId,
+      userId,
+    );
+
+  if (
+    existingMember &&
+    existingMember.status === "ACTIVE"
+  ) {
+    throw new CustomError(
+      "You are already a member of this team",
+      409,
+    );
+  }
+
+  return acceptTeamInvitation(
+    invitationId,
+    invitation.teamId,
+    userId,
+  );
+};
+
+
+export const rejectTeamInvitationService = async (
+  userId: string,
+  invitationId: string,
+): Promise<TeamInvitationActionResponse> => {
+  const invitation =
+    await findTeamInvitationById(invitationId);
+
+  if (!invitation) {
+    throw new CustomError(
+      "Team invitation not found",
+      404,
+    );
+  }
+
+  if (invitation.invitedUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to reject this invitation",
+      403,
+    );
+  }
+
+  if (invitation.status !== "PENDING") {
+    throw new CustomError(
+      "Only pending invitations can be rejected",
+      400,
+    );
+  }
+
+  return rejectTeamInvitation(invitationId);
+};
+
+

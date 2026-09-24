@@ -4,7 +4,7 @@ import * as TeamService from "../services/team.service.js";
 import ApiResponse from "../utils/api-response.js";
 import { CustomError } from "../utils/custom-error.js";
 import { logger } from "../utils/logger.js";
-import { getMyTeamInvitationsService, inviteTeamVendorService, inviteVendorOnboardingService, searchTeamVendorsService } from "../services/team.service.js";
+import { acceptTeamInvitationService, getMyTeamInvitationsService, inviteTeamVendorService, inviteVendorOnboardingService, rejectTeamInvitationService, searchTeamVendorsService } from "../services/team.service.js";
 
 export const createTeam = async (
   c: Context,
@@ -197,6 +197,93 @@ export const getMyTeamInvitationsController = async (
 
     return ApiResponse.error(
       "Failed to fetch team invitations",
+      500,
+    ).send(c);
+  }
+};
+
+export const acceptTeamInvitationController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+
+    const invitationId =
+      c.req.param("invitationId");
+
+    if (!invitationId) {
+      return ApiResponse.error(
+        "Invitation ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await acceptTeamInvitationService(
+        userId,
+        invitationId,
+      );
+
+    return ApiResponse.success(
+      "Team invitation accepted successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to accept team invitation",
+      500,
+    ).send(c);
+  }
+};
+
+
+export const rejectTeamInvitationController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+
+    const invitationId =
+      c.req.param("invitationId");
+
+    if (!invitationId) {
+      return ApiResponse.error(
+        "Invitation ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await rejectTeamInvitationService(
+        userId,
+        invitationId,
+      );
+
+    return ApiResponse.success(
+      "Team invitation rejected successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to reject team invitation",
       500,
     ).send(c);
   }

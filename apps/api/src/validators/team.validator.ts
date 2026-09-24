@@ -95,3 +95,12 @@ export const TeamInvitationParamSchema = z.object({
       example: "01a0c342-08b0-74c6-985d-3c384a5a17a8",
     }),
 });
+
+export const TeamIdParamSchema = z.object({
+  teamId: z
+    .string()
+    .min(1, "Team ID is required")
+    .openapi({
+      example: "01a0c342-08b0-74c6-985d-3c384a5a17a8",
+    }),
+});

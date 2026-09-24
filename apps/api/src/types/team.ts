@@ -86,3 +86,15 @@ export type MyTeamInvitation = {
     email: string;
   };
 };
+
+export type TeamInvitationActionResponse = {
+  id: string;
+  teamId: string;
+  invitedUserId: string | null;
+  email: string;
+  invitedByUserId: string;
+  status: string;
+  expiresAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
