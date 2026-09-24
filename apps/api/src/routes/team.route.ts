@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { acceptTeamInvitationController, createTeam, getMyTeamInvitationsController, getTeamMembersController, inviteTeamVendorController, inviteVendorOnboardingController, rejectTeamInvitationController, searchTeamVendorsController } from "../controllers/team.controller.js";
+import { acceptTeamInvitationController, createTeam, getMyTeamInvitationsController, getTeamDetailsController, getTeamMembersController, inviteTeamVendorController, inviteVendorOnboardingController, rejectTeamInvitationController, searchTeamVendorsController, updateTeamController } from "../controllers/team.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema, TeamIdParamSchema, TeamInvitationParamSchema } from "../validators/team.validator.js";
+import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema, TeamIdParamSchema, TeamInvitationParamSchema, UpdateTeamSchema } from "../validators/team.validator.js";
 
 export const teamRoutes = new OpenAPIHono();
 
@@ -688,3 +688,170 @@ teamRoutes.openapi(
   getTeamMembersController as any,
 );
 
+teamRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/{teamId}",
+    tags: ["Team"],
+    summary: "Get team details",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: TeamIdParamSchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Team details fetched successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid team ID",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Team not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch team details",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  getTeamDetailsController as any,
+);
+
+
+teamRoutes.openapi(
+  createRoute({
+    method: "patch",
+    path: "/{teamId}",
+    tags: ["Team"],
+    summary: "Update team profile",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: TeamIdParamSchema,
+
+      body: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: UpdateTeamSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description: "Team updated successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid request",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Only the team owner can update the team",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Team not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Failed to update team",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  updateTeamController as any,
+);

@@ -1,4 +1,4 @@
-import type { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
+import type { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema, UpdateTeamSchema } from "../validators/team.validator.js";
 import type z from "zod";
 
 export type CreateTeamResponse = {
@@ -119,4 +119,43 @@ export type TeamMemberResponse = {
       experienceYears: number | null;
     } | null;
   };
+};
+
+export type TeamDetailsResponse = {
+  id: string;
+  name: string;
+  description: string | null;
+  logoUrl: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  createdByUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: {
+    id: string;
+    name: string | null;
+    avatarUrl: string | null;
+  };
+  _count: {
+    members: number;
+    
+  };
+};
+
+export type UpdateTeamInput = z.infer<
+  typeof UpdateTeamSchema
+>;
+
+export type UpdateTeamResponse = {
+  id: string;
+  name: string;
+  description: string | null;
+  logoUrl: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  createdByUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
 };

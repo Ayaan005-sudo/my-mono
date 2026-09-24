@@ -104,3 +104,41 @@ export const TeamIdParamSchema = z.object({
       example: "01a0c342-08b0-74c6-985d-3c384a5a17a8",
     }),
 });
+
+export const UpdateTeamSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Team name must be at least 2 characters")
+    .optional()
+    .openapi({ example: "Himalayan Ascents" }),
+
+  description: z
+    .string()
+    .optional()
+    .openapi({
+      example: "A team of experienced trekking professionals.",
+    }),
+
+  logoUrl: z
+    .string()
+    .url("Invalid logo URL")
+    .optional()
+    .openapi({
+      example: "https://example.com/team-logo.jpg",
+    }),
+
+  city: z
+    .string()
+    .optional()
+    .openapi({ example: "Dehradun" }),
+
+  state: z
+    .string()
+    .optional()
+    .openapi({ example: "Uttarakhand" }),
+
+  country: z
+    .string()
+    .optional()
+    .openapi({ example: "India" }),
+});

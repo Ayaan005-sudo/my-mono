@@ -1,7 +1,7 @@
 import { sendVendorOnboardingInvitationEmail } from "../lib/email.service.js";
 import { findVendorProfileByUserId } from "../repositories/onboarding.repository.js";
-import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findUserByEmail, getActiveTeamMembers, getMyPendingTeamInvitations, rejectTeamInvitation, searchApprovedVendors } from "../repositories/team.repository.js";
-import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamInvitationActionResponse, TeamInvitationResponse, TeamMemberResponse, TeamVendorSearchResult, VendorOnboardingInvitationResponse } from "../types/index.js";
+import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findUserByEmail, getActiveTeamMembers, getMyPendingTeamInvitations, getTeamDetailsById, rejectTeamInvitation, searchApprovedVendors, updateTeam } from "../repositories/team.repository.js";
+import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamDetailsResponse, TeamInvitationActionResponse, TeamInvitationResponse, TeamMemberResponse, TeamVendorSearchResult, UpdateTeamInput, UpdateTeamResponse, VendorOnboardingInvitationResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 export const createTeamService = async (
@@ -328,3 +328,50 @@ export const getTeamMembersService = async (
   return getActiveTeamMembers(teamId);
 };
 
+export const getTeamDetailsService = async (
+  teamId: string,
+): Promise<TeamDetailsResponse> => {
+  const team =
+    await getTeamDetailsById(teamId);
+
+  if (!team) {
+    
+    throw new CustomError(
+      "Team not found",
+      404,
+    );
+  }
+
+  return team;
+};
+
+export const updateTeamService = async (
+  userId: string,
+  teamId: string,
+  data: UpdateTeamInput,
+): Promise<UpdateTeamResponse> => {
+  const team = await findTeamById(teamId);
+
+  if (!team) {
+    throw new CustomError(
+      "Team not found",
+      404,
+    );
+  }
+
+  const membership =
+    await findTeamMember(teamId, userId);
+
+  if (
+    !membership ||
+    membership.role !== "OWNER" ||
+    membership.status !== "ACTIVE"
+  ) {
+    throw new CustomError(
+      "Only the team owner can update the team",
+      403,
+    );
+  }
+
+  return updateTeam(teamId, data);
+};
