@@ -1,6 +1,6 @@
 import { prisma } from "../utils/prisma.js";
 import { uuidv7 } from "uuidv7";
-import type { CreateTeamInput, CreateTeamResponse, MyTeamInvitation, TeamInvitationActionResponse } from "../types/index.js";
+import type { CreateTeamInput, CreateTeamResponse, MyTeamInvitation, TeamInvitationActionResponse, TeamMemberResponse } from "../types/index.js";
 import type { TeamInvitation } from "@mono/database";
 
 export const createTeam = async (
@@ -321,6 +321,46 @@ export const findTeamInvitationById = async (
   return prisma.teamInvitation.findUnique({
     where: {
       id: invitationId,
+    },
+  });
+};
+
+export const getActiveTeamMembers = async (
+  teamId: string,
+): Promise<TeamMemberResponse[]> => {
+  return prisma.teamMember.findMany({
+    where: {
+      teamId,
+      status: "ACTIVE",
+    },
+
+    select: {
+      id: true,
+      role: true,
+      status: true,
+      joinedAt: true,
+
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+          city: true,
+          state: true,
+
+          vendorProfile: {
+            select: {
+              vendorType: true,
+              experienceYears: true,
+            },
+          },
+        },
+      },
+    },
+
+    orderBy: {
+      joinedAt: "asc",
     },
   });
 };

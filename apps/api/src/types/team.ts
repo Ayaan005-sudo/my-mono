@@ -98,3 +98,25 @@ export type TeamInvitationActionResponse = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+
+export type TeamMemberResponse = {
+  id: string;
+  role: string;
+  status: string;
+  joinedAt: Date | null;
+
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatarUrl: string | null;
+    city: string | null;
+    state: string | null;
+
+    vendorProfile: {
+      vendorType: string | null;
+      experienceYears: number | null;
+    } | null;
+  };
+};

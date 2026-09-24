@@ -4,7 +4,7 @@ import * as TeamService from "../services/team.service.js";
 import ApiResponse from "../utils/api-response.js";
 import { CustomError } from "../utils/custom-error.js";
 import { logger } from "../utils/logger.js";
-import { acceptTeamInvitationService, getMyTeamInvitationsService, inviteTeamVendorService, inviteVendorOnboardingService, rejectTeamInvitationService, searchTeamVendorsService } from "../services/team.service.js";
+import { acceptTeamInvitationService, getMyTeamInvitationsService, getTeamMembersService, inviteTeamVendorService, inviteVendorOnboardingService, rejectTeamInvitationService, searchTeamVendorsService } from "../services/team.service.js";
 
 export const createTeam = async (
   c: Context,
@@ -284,6 +284,43 @@ export const rejectTeamInvitationController = async (
 
     return ApiResponse.error(
       "Failed to reject team invitation",
+      500,
+    ).send(c);
+  }
+};
+
+export const getTeamMembersController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const teamId = c.req.param("teamId");
+
+    if (!teamId) {
+      return ApiResponse.error(
+        "Team ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await getTeamMembersService(teamId);
+
+    return ApiResponse.success(
+      "Team members fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to fetch team members",
       500,
     ).send(c);
   }

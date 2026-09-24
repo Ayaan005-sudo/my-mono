@@ -1,7 +1,7 @@
 import { sendVendorOnboardingInvitationEmail } from "../lib/email.service.js";
 import { findVendorProfileByUserId } from "../repositories/onboarding.repository.js";
-import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findUserByEmail, getMyPendingTeamInvitations, rejectTeamInvitation, searchApprovedVendors } from "../repositories/team.repository.js";
-import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamInvitationActionResponse, TeamInvitationResponse, TeamVendorSearchResult, VendorOnboardingInvitationResponse } from "../types/index.js";
+import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findUserByEmail, getActiveTeamMembers, getMyPendingTeamInvitations, rejectTeamInvitation, searchApprovedVendors } from "../repositories/team.repository.js";
+import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamInvitationActionResponse, TeamInvitationResponse, TeamMemberResponse, TeamVendorSearchResult, VendorOnboardingInvitationResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 export const createTeamService = async (
@@ -313,4 +313,18 @@ export const rejectTeamInvitationService = async (
   return rejectTeamInvitation(invitationId);
 };
 
+export const getTeamMembersService = async (
+  teamId: string,
+): Promise<TeamMemberResponse[]> => {
+  const team = await findTeamById(teamId);
+
+  if (!team) {
+    throw new CustomError(
+      "Team not found",
+      404,
+    );
+  }
+
+  return getActiveTeamMembers(teamId);
+};
 

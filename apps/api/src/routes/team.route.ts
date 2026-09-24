@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { acceptTeamInvitationController, createTeam, getMyTeamInvitationsController, inviteTeamVendorController, inviteVendorOnboardingController, rejectTeamInvitationController, searchTeamVendorsController } from "../controllers/team.controller.js";
+import { acceptTeamInvitationController, createTeam, getMyTeamInvitationsController, getTeamMembersController, inviteTeamVendorController, inviteVendorOnboardingController, rejectTeamInvitationController, searchTeamVendorsController } from "../controllers/team.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema, TeamInvitationParamSchema } from "../validators/team.validator.js";
+import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema, TeamIdParamSchema, TeamInvitationParamSchema } from "../validators/team.validator.js";
 
 export const teamRoutes = new OpenAPIHono();
 
@@ -611,3 +611,80 @@ teamRoutes.openapi(
 
   rejectTeamInvitationController as any,
 );
+
+
+teamRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/{teamId}/members",
+    tags: ["Team"],
+    summary: "Get active team members",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: TeamIdParamSchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Team members fetched successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid team ID",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Team not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch team members",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  getTeamMembersController as any,
+);
+
