@@ -256,6 +256,21 @@ model MasterTrek {
   activities  Activity[] @relation(fields: [activityIds], references: [id])
 
   packages Package[]
+  faqs     MasterTrekFaq[]
+}
+
+model MasterTrekFaq {
+  id           String @id @map("_id")
+  masterTrekId String
+
+  question String
+  answer   String
+  order    Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  masterTrek MasterTrek @relation(fields: [masterTrekId], references: [id], onDelete: Cascade)
 }
 
 model TrekRoute {
@@ -299,6 +314,8 @@ model TrekItineraryDay {
   distanceKm Float?
   duration   String?
   altitude   Float?
+
+  imageUrls String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
