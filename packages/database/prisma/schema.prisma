@@ -23,8 +23,9 @@ enum UserStatus {
 
 enum Difficulty {
   EASY
-  MEDIUM
-  HARD
+  MODERATE
+  DIFFICULT
+  PRO
 }
 
 enum TrekStatus {
