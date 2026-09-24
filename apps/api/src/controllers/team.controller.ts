@@ -1,9 +1,10 @@
 import type { Context } from "hono";
-import type { CreateTeamInput } from "../types/index.js";
+import type { CreateTeamInput, SearchTeamVendorQuery } from "../types/index.js";
 import * as TeamService from "../services/team.service.js";
 import ApiResponse from "../utils/api-response.js";
 import { CustomError } from "../utils/custom-error.js";
 import { logger } from "../utils/logger.js";
+import { searchTeamVendorsService } from "../services/team.service.js";
 
 export const createTeam = async (
   c: Context,
@@ -47,3 +48,37 @@ export const createTeam = async (
     ).send(c);
   }
 };
+
+
+export const searchTeamVendorsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const query =
+      c.req.valid("query" as never) as SearchTeamVendorQuery;
+
+    const result = await searchTeamVendorsService(
+      query.search,
+      query.limit,
+    );
+
+    return ApiResponse.success(
+      "Vendors fetched successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to search vendors",
+      500,
+    ).send(c);
+  }
+};
+

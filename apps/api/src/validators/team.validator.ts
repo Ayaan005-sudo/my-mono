@@ -46,3 +46,24 @@ export const CreateTeamSchema = z.object({
       example: "India",
     }),
 });
+
+
+export const SearchTeamVendorQuerySchema = z.object({
+  search: z
+    .string()
+    .min(1, "Search query is required")
+    .openapi({
+      example: "ayaan",
+    }),
+
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .optional()
+    .default(10)
+    .openapi({
+      example: 10,
+    }),
+});

@@ -34,3 +34,61 @@ export const createTeam = async (
     return team;
   });
 };
+
+export const searchApprovedVendors = async (
+  search: string,
+  limit: number,
+) => {
+  return prisma.user.findMany({
+    where: {
+      role: "VENDOR",
+      status: "ACTIVE",
+      isDeleted: false,
+
+      vendorProfile: {
+        is: {
+          verificationStatus: "APPROVED",
+        },
+      },
+
+      OR: [
+        {
+          name: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          email: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      avatarUrl: true,
+      city: true,
+      state: true,
+
+      vendorProfile: {
+        select: {
+          vendorType: true,
+          experienceYears: true,
+        },
+      },
+    },
+
+    take: limit,
+
+    orderBy: {
+      name: "asc",
+    },
+  });
+};
+
+

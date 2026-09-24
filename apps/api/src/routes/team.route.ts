@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { createTeam } from "../controllers/team.controller.js";
+import { createTeam, searchTeamVendorsController } from "../controllers/team.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { CreateTeamSchema } from "../validators/team.validator.js";
+import { CreateTeamSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
 
 export const teamRoutes = new OpenAPIHono();
 
@@ -85,4 +85,79 @@ teamRoutes.openapi(
     middleware: [authMiddleware, requireRole("VENDOR")],
   }),
   createTeam as any,
+);
+
+teamRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/vendors/search",
+
+    tags: ["Team"],
+
+    summary: "Search approved vendors for team",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      query: SearchTeamVendorQuerySchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description: "Vendors fetched successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid search query",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Forbidden - Vendor only",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Failed to search vendors",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  searchTeamVendorsController as any,
 );
