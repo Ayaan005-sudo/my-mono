@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { createTeam, inviteTeamVendorController, searchTeamVendorsController } from "../controllers/team.controller.js";
+import { createTeam, inviteTeamVendorController, inviteVendorOnboardingController, searchTeamVendorsController } from "../controllers/team.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { CreateTeamSchema, InviteTeamVendorSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
+import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema } from "../validators/team.validator.js";
 
 export const teamRoutes = new OpenAPIHono();
 
@@ -265,4 +265,109 @@ teamRoutes.openapi(
   }),
 
   inviteTeamVendorController as any,
+);
+
+teamRoutes.openapi(
+  createRoute({
+    method: "post",
+    path: "/{teamId}/onboarding-invitations",
+
+    tags: ["Team"],
+
+    summary: "Invite user to complete vendor onboarding",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        teamId: z.string().min(1).openapi({
+          example: "019abc123team",
+        }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema: InviteVendorOnboardingSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      201: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description: "Vendor onboarding invitation sent successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid request",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Only team owner can send invitations",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Team not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invitation already exists or user is already a vendor",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Failed to send vendor onboarding invitation",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  inviteVendorOnboardingController as any,
 );

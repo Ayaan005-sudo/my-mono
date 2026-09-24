@@ -76,3 +76,12 @@ export const InviteTeamVendorSchema = z.object({
       example: "019abc123vendor",
     }),
 });
+
+export const InviteVendorOnboardingSchema = z.object({
+  email: z
+    .string()
+    .email("Invalid email address")
+    .openapi({
+      example: "someone@gmail.com",
+    }),
+});

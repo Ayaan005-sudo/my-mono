@@ -169,3 +169,59 @@ export const createTeamInvitation = async (
     },
   });
 };
+
+export const findUserByEmail = async (
+  email: string,
+) => {
+  return prisma.user.findUnique({
+    where: {
+      email,
+    },
+
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      status: true,
+      isDeleted: true,
+
+      vendorProfile: {
+        select: {
+          verificationStatus: true,
+        },
+      },
+    },
+  });
+};
+
+
+export const createOnboardingTeamInvitation = async (
+  teamId: string,
+  email: string,
+  invitedByUserId: string,
+  invitedUserId?: string,
+) => {
+  return prisma.teamInvitation.create({
+    data: {
+      id :uuidv7(),
+      teamId,
+      email,
+      invitedByUserId,
+      invitedUserId: invitedUserId ?? null,
+      status: "PENDING",
+    },
+  });
+};
+
+export const findPendingTeamInvitationByEmail = async (
+  teamId: string,
+  email: string,
+) => {
+  return prisma.teamInvitation.findFirst({
+    where: {
+      teamId,
+      email,
+      status: "PENDING",
+    },
+  });
+};

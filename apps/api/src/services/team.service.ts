@@ -1,6 +1,7 @@
+import { sendVendorOnboardingInvitationEmail } from "../lib/email.service.js";
 import { findVendorProfileByUserId } from "../repositories/onboarding.repository.js";
-import { createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findTeamById, findTeamMember, searchApprovedVendors } from "../repositories/team.repository.js";
-import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, TeamInvitationResponse, TeamVendorSearchResult } from "../types/index.js";
+import { createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamMember, findUserByEmail, searchApprovedVendors } from "../repositories/team.repository.js";
+import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, TeamInvitationResponse, TeamVendorSearchResult, VendorOnboardingInvitationResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 export const createTeamService = async (
@@ -135,4 +136,79 @@ export const inviteTeamVendorService = async (
     vendor.email,
     userId,
   );
+};
+
+
+export const inviteVendorOnboardingService = async (
+  userId: string,
+  teamId: string,
+  data: InviteVendorOnboardingInput,
+): Promise<VendorOnboardingInvitationResponse> => {
+  const email = data.email.trim().toLowerCase();
+
+  const team = await findTeamById(teamId);
+
+  if (!team) {
+    throw new CustomError(
+      "Team not found",
+      404,
+    );
+  }
+
+  const ownerMembership = await findTeamMember(
+    teamId,
+    userId,
+  );
+
+  if (
+    !ownerMembership ||
+    ownerMembership.role !== "OWNER" ||
+    ownerMembership.status !== "ACTIVE"
+  ) {
+    throw new CustomError(
+      "Only the team owner can send onboarding invitations",
+      403,
+    );
+  }
+
+  const existingUser = await findUserByEmail(email);
+
+  if (
+    existingUser?.role === "VENDOR" &&
+    existingUser.vendorProfile?.verificationStatus === "APPROVED"
+  ) {
+    throw new CustomError(
+      "This user is already an approved vendor. Invite them through vendor search",
+      409,
+    );
+  }
+
+  const existingInvitation =
+    await findPendingTeamInvitationByEmail(
+      teamId,
+      email,
+    );
+
+  if (existingInvitation) {
+    throw new CustomError(
+      "Onboarding invitation already sent to this email",
+      409,
+    );
+  }
+
+  const invitation =
+    await createOnboardingTeamInvitation(
+      teamId,
+      email,
+      userId,
+      existingUser?.id,
+    );
+
+  await sendVendorOnboardingInvitationEmail(
+    email,
+    team.name,
+    invitation.id,
+  );
+
+  return invitation;
 };
