@@ -196,6 +196,11 @@ export const getCompleteMasterTrek = async (
           }
         },
       },
+      faqs: {
+        orderBy: {
+          order: "asc",
+        },
+      },
        packages: true,
     },
   });
@@ -233,6 +238,11 @@ export const getMasterTrekByIdAdmin = async (
             }
           }
 
+        },
+      },
+      faqs: {
+        orderBy: {
+          order: "asc",
         },
       },
 
@@ -334,6 +344,12 @@ export const getMasterTrekByIdVendor = async (
           },
         },
       },
+
+      faqs: {
+        orderBy: {
+          order: "asc",
+        },
+      },
     },
   });
 };
@@ -411,6 +427,12 @@ export const getMasterTrekByIdUser = async (
               location: true,
             },
           },
+        },
+      },
+
+      faqs: {
+        orderBy: {
+          order: "asc",
         },
       },
 

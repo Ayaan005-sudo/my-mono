@@ -31,6 +31,12 @@ export const masterTrekAdminInclude = {
     },
   },
 
+  faqs: {
+    orderBy: {
+      order: "asc",
+    },
+  },
+
   packages: true,
 } satisfies Prisma.MasterTrekInclude;
 
@@ -75,6 +81,11 @@ export type MasterTrekVendorResponse =
       location: true;
       createdBy: true;
       activities: true;
+      faqs: {
+        orderBy: {
+          order: "asc";
+        };
+      };
       routes: {
         include: {
           itineraryDays: {
@@ -117,6 +128,11 @@ export type MasterTrekUserResponse =
     include: {
       location: true;
       activities: true;
+      faqs: {
+        orderBy: {
+          order: "asc";
+        };
+      };
       routes: {
         include: {
           itineraryDays: {
@@ -140,7 +156,3 @@ export type MasterTrekUserResponse =
     startingPrice: number | null;
     currency: string | null;
   };
-
-
-
-

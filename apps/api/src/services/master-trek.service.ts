@@ -1,30 +1,30 @@
 import {
-    findLocationById,
-    createActivity,
-    createMasterTrekRepo,
-    createNearbyPlace,
-    createTrekNearbyPlace,
-    addTrekToActivities,
-    deleteRoutesByTrekId,
-    updateMasterTrekRepo,
-    findNearbyLinks,
-    deleteNearbyLinks,
-    deleteNearbyPlacesByIds,
-    getCompleteMasterTrek,
-    findMasterTrekById,
-    getMasterTrekByIdAdmin,
-    deleteMasterTrekById,
-    getAllMasterTreksAdmin,
-    getAllMasterTreksVendor,
-    getMasterTrekByIdVendor,
-    getAllMasterTreksUser,
-    getMasterTrekByIdUser,
+  findLocationById,
+  createActivity,
+  createMasterTrekRepo,
+  createNearbyPlace,
+  createTrekNearbyPlace,
+  addTrekToActivities,
+  deleteRoutesByTrekId,
+  updateMasterTrekRepo,
+  findNearbyLinks,
+  deleteNearbyLinks,
+  deleteNearbyPlacesByIds,
+  getCompleteMasterTrek,
+  findMasterTrekById,
+  getMasterTrekByIdAdmin,
+  deleteMasterTrekById,
+  getAllMasterTreksAdmin,
+  getAllMasterTreksVendor,
+  getMasterTrekByIdVendor,
+  getAllMasterTreksUser,
+  getMasterTrekByIdUser,
 } from "../repositories/master-trek.repository.js";
 
-import type {CreateMasterTrekRequest, GetAllMasterTreksResponse, GetAllMasterTreksUserResponse, GetAllMasterTreksVendorResponse, MasterTrekByIdResponse, MasterTrekUserListItemResponse, MasterTrekUserResponse, MasterTrekVendorResponse, UpdateMasterTrekRequest} from "../types/index.js";
-import {CustomError} from "../utils/custom-error.js";
+import type { CreateMasterTrekRequest, GetAllMasterTreksResponse, GetAllMasterTreksUserResponse, GetAllMasterTreksVendorResponse, MasterTrekByIdResponse, MasterTrekUserListItemResponse, MasterTrekUserResponse, MasterTrekVendorResponse, UpdateMasterTrekRequest } from "../types/index.js";
+import { CustomError } from "../utils/custom-error.js";
 import type { MasterTrek } from "@mono/database";
-import {  uuidv7 } from "uuidv7";
+import { uuidv7 } from "uuidv7";
 
 
 export const createMasterTrek = async (
@@ -211,6 +211,15 @@ export const createMasterTrek = async (
         routes: {
           create: routes,
         },
+
+        faqs: {
+          create: data.faqs.map((faq, index) => ({
+            id: uuidv7(),
+            question: faq.question,
+            answer: faq.answer,
+            order: faq.order ?? index,
+          })),
+        },
       });
 
     await addTrekToActivities(
@@ -249,6 +258,10 @@ export const createMasterTrek = async (
 
     return trek;
   } catch (error) {
+    console.error(
+    "ACTUAL CREATE MASTER TREK ERROR:",
+    error,
+  );
     if (error instanceof CustomError) {
       throw error;
     }
@@ -294,6 +307,7 @@ export const updateMasterTrekService = async (
       activities,
       routes,
       nearbyPlaces,
+      faqs,
       ...trekData
     } = data;
 
@@ -328,85 +342,85 @@ export const updateMasterTrekService = async (
     const builtRoutes =
       routes !== undefined
         ? await Promise.all(
-            routes.map(
-              async (route) => {
-                const itineraryDays =
-                  await Promise.all(
-                    route.itineraryDays.map(
-                      async (day) => {
-                        const activities =
-                          await Promise.all(
-                            day.activities.map(
-                              (activity) =>
-                                createActivity(
-                                  uuidv7(),
-                                  activity.name,
-                                  activity.description,
-                                  activity.iconUrl,
-                                ),
-                            ),
-                          );
+          routes.map(
+            async (route) => {
+              const itineraryDays =
+                await Promise.all(
+                  route.itineraryDays.map(
+                    async (day) => {
+                      const activities =
+                        await Promise.all(
+                          day.activities.map(
+                            (activity) =>
+                              createActivity(
+                                uuidv7(),
+                                activity.name,
+                                activity.description,
+                                activity.iconUrl,
+                              ),
+                          ),
+                        );
 
-                        return {
-                          id: uuidv7(),
-                          dayNumber:
-                            day.dayNumber,
-                          title:
-                            day.title,
-                          description:
-                            day.description,
-                          startLocation:
-                            day.startLocation,
-                          endLocation:
-                            day.endLocation,
-                          distanceKm:
-                            day.distanceKm,
-                          duration:
-                            day.duration,
-                          altitude:
-                            day.altitude,
-                          activityIds:
-                            activities.map(
-                              (activity) =>
-                                activity.id,
-                            ),
-                        };
-                      },
-                    ),
-                  );
+                      return {
+                        id: uuidv7(),
+                        dayNumber:
+                          day.dayNumber,
+                        title:
+                          day.title,
+                        description:
+                          day.description,
+                        startLocation:
+                          day.startLocation,
+                        endLocation:
+                          day.endLocation,
+                        distanceKm:
+                          day.distanceKm,
+                        duration:
+                          day.duration,
+                        altitude:
+                          day.altitude,
+                        activityIds:
+                          activities.map(
+                            (activity) =>
+                              activity.id,
+                          ),
+                      };
+                    },
+                  ),
+                );
 
-                return {
-                  id: uuidv7(),
-                  name: route.name,
-                  description:
-                    route.description,
-                  distanceKm:
-                    route.distanceKm,
-                  difficulty:
-                    route.difficulty,
-                  elevationGain:
-                    route.elevationGain,
-                  ascentTime:
-                    route.ascentTime,
-                  descentTime:
-                    route.descentTime,
-                  startPoint:
-                    route.startPoint,
-                  endPoint:
-                    route.endPoint,
-                  isPopular:
-                    route.isPopular,
-                  isDefault:
-                    route.isDefault,
+              return {
+                id: uuidv7(),
+                name: route.name,
+                description:
+                  route.description,
+                distanceKm:
+                  route.distanceKm,
+                difficulty:
+                  route.difficulty,
+                elevationGain:
+                  route.elevationGain,
+                ascentTime:
+                  route.ascentTime,
+                descentTime:
+                  route.descentTime,
+                startPoint:
+                  route.startPoint,
+                endPoint:
+                  route.endPoint,
+                isPopular:
+                  route.isPopular,
+                isDefault:
+                  route.isDefault,
 
-                  itineraryDays: {
-                    create:
-                      itineraryDays,
-                  },
-                };
-              },
-            ),
-          )
+                itineraryDays: {
+                  create:
+                    itineraryDays,
+                },
+              };
+            },
+          ),
+        )
         : undefined;
 
     const trek =
@@ -415,19 +429,14 @@ export const updateMasterTrekService = async (
         {
           ...trekData,
 
-          ...(data.name && {
-            slug: data.name
-              .toLowerCase()
-              .trim()
-              .replace(
-                /[^a-z0-9]+/g,
-                "-",
-              )
-              .replace(
-                /^-|-$/g,
-                "",
-              ),
-          }),
+           ...(data.name !== undefined &&
+        data.name !== existing.name && {
+          slug: data.name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, ""),
+        }),
 
           ...(activityIds && {
             activityIds,
@@ -436,6 +445,18 @@ export const updateMasterTrekService = async (
           ...(builtRoutes && {
             routes: {
               create: builtRoutes,
+            },
+          }),
+
+          ...(faqs !== undefined && {
+            faqs: {
+              deleteMany: {},
+              create: faqs.map((faq, index) => ({
+                id: uuidv7(),
+                question: faq.question,
+                answer: faq.answer,
+                order: faq.order ?? index,
+              })),
             },
           }),
         },
@@ -489,21 +510,25 @@ export const updateMasterTrekService = async (
     }
 
     const updatedTrek =
-  await getCompleteMasterTrek(
-    trek.id,
-  );
+      await getCompleteMasterTrek(
+        trek.id,
+      );
 
 
     if (!updatedTrek) {
-  throw new CustomError(
-    "Trek not found after update",
-    404,
-  );
-}
+      throw new CustomError(
+        "Trek not found after update",
+        404,
+      );
+    }
 
     return updatedTrek;
 
   } catch (error) {
+    console.error(
+    "ACTUAL UPDATE MASTER TREK ERROR:",
+    error,
+  );
     if (error instanceof CustomError) {
       throw error;
     }
@@ -715,7 +740,3 @@ export const getMasterTrekByIdUserService = async (
     currency,
   };
 };
-
-
-
-

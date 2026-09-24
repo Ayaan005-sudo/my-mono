@@ -30,6 +30,7 @@ export const createMasterTrek = async (
             201,
         ).send(c);
     } catch (error) {
+       console.error("CREATE MASTER TREK ORIGINAL ERROR:", error);
         logger.error(
             { error },
             "Failed to create master trek",
@@ -464,4 +465,4 @@ export const getMasterTrekByIdUser = async (
 
 
 
-
+

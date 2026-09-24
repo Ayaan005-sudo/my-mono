@@ -174,6 +174,20 @@ export const NearbyPlaceInputSchema = z.object({
   }),
 });
 
+export const MasterTrekFaqInputSchema = z.object({
+  question: z.string().min(1).openapi({
+    example: "What is the best time to visit?",
+  }),
+
+  answer: z.string().min(1).openapi({
+    example: "The best time to visit is from December to April.",
+  }),
+
+  order: z.number().int().nonnegative().optional().openapi({
+    example: 0,
+  }),
+});
+
 export const CreateMasterTrekSchema = z.object({
   name: z.string().min(1).openapi({
     example: "Kedarkantha Trek",
@@ -379,9 +393,20 @@ export const CreateMasterTrekSchema = z.object({
         },
       ],
     }),
+
+  faqs: z
+    .array(MasterTrekFaqInputSchema)
+    .default([])
+    .openapi({
+      example: [
+        {
+          question: "What is the best time to visit?",
+          answer: "The best time to visit is from December to April.",
+          order: 0,
+        },
+      ],
+    }),
 });
-
-
 
 export const UpdateMasterTrekSchema =
   CreateMasterTrekSchema.partial();
