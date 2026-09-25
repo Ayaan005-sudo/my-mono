@@ -1,5 +1,5 @@
 import type { DepositType, Difficulty, PackageStatus, ScheduleStatus, ScheduleType } from "@mono/database";
-import type { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, GetMyActivitiesQuerySchema, PackageItineraryDaySchema, SearchPackagesQuerySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
+import type { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, GetMyActivitiesQuerySchema, LocationPackagesQuerySchema, PackageItineraryDaySchema, SearchPackagesQuerySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 import z from "zod";
 
 export type CreatePackageInput = {
@@ -557,3 +557,7 @@ export type PublicPackageDetail = {
 
   schedules: PublicPackageSchedule[];
 };
+
+export type LocationPackagesQuery = z.infer<
+  typeof LocationPackagesQuerySchema
+>;

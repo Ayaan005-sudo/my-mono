@@ -1289,3 +1289,120 @@ export const findPublicPackageDetail = async (
   });
 }; 
 
+
+export const findPublicPackagesByLocationIds = async (
+  locationIds: string[],
+  page: number,
+  limit: number,
+) => {
+  const now = new Date();
+
+  const where = {
+    status: "PUBLISHED" as const,
+    visibility: "PUBLIC" as const,
+
+    locationId: {
+      in: locationIds,
+    },
+  };
+
+  const [packages, total] = await Promise.all([
+    prisma.package.findMany({
+      where,
+
+      skip: (page - 1) * limit,
+      take: limit,
+
+      orderBy: {
+        createdAt: "desc",
+      },
+
+      select: {
+        id: true,
+        title: true,
+        galleryImages: true,
+        difficulty: true,
+        durationDays: true,
+
+        location: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+
+        schedules: {
+          where: {
+            status: "OPEN",
+            startDate: {
+              gt: now,
+            },
+            availableSeats: {
+              gt: 0,
+            },
+          },
+
+          orderBy: {
+            startDate: "asc",
+          },
+
+          select: {
+            price: true,
+            adultPrice: true,
+            childPrice: true,
+            currency: true,
+          },
+        },
+      },
+    }),
+
+    prisma.package.count({
+      where,
+    }),
+  ]);
+
+  return {
+    packages,
+    total,
+  };
+};
+
+
+export const findLocationAndDescendantIds = async (
+  locationId: string,
+): Promise<string[]> => {
+  const locationIds: string[] = [locationId];
+  let currentLevelIds: string[] = [locationId];
+
+  while (currentLevelIds.length > 0) {
+    const children = await prisma.location.findMany({
+      where: {
+        parentId: {
+          in: currentLevelIds,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const childIds = children.map((location) => location.id);
+
+    if (childIds.length === 0) {
+      break;
+    }
+
+    locationIds.push(...childIds);
+    currentLevelIds = childIds;
+  }
+
+  return locationIds;
+};

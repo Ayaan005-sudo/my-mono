@@ -620,3 +620,29 @@ export const PublicPackageDetailParamSchema = z.object({
       example: "01a0b469-20fb-795b-98ca-89e931968a12",
     }),
 });
+
+
+export const LocationPackagesQuerySchema = z.object({
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .default(1)
+    .openapi({ example: 1 }),
+
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .optional()
+    .default(12)
+    .openapi({ example: 12 }),
+});
+
+export const LocationIdParamSchema = z.object({
+  locationId: z.string().min(1, "Location ID is required").openapi({
+    example: "STATE:5",
+  }),
+});

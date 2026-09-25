@@ -4,8 +4,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deactivatePackageController, deletePackageItineraryDayController, getMyActivitiesController, getPackageItinerary, getPackageRoutes, getPackageSchedulesController, getPublicPackageDetailController, openPackageScheduleController, publishPackageController, searchPublicPackagesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
-import { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetMyActivitiesQuerySchema, GetPackageRoutesParamsSchema, PackageItineraryDaySchema, PublicPackageDetailParamSchema, SearchPackagesQuerySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
+import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deactivatePackageController, deletePackageItineraryDayController, getMyActivitiesController, getPackageItinerary, getPackageRoutes, getPackagesByLocationController, getPackageSchedulesController, getPublicPackageDetailController, openPackageScheduleController, publishPackageController, searchPublicPackagesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
+import { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetMyActivitiesQuerySchema, GetPackageRoutesParamsSchema, LocationIdParamSchema, LocationPackagesQuerySchema, PackageItineraryDaySchema, PublicPackageDetailParamSchema, SearchPackagesQuerySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 
 
 export const PackageRoutes = new OpenAPIHono();
@@ -2077,4 +2077,50 @@ PackageRoutes.openapi(
   }),
 
   getPublicPackageDetailController as any,
+);
+
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/location/{locationId}",
+    tags: ["Package"],
+    summary: "Get public packages by location",
+
+    request: {
+      params: LocationIdParamSchema,
+      query: LocationPackagesQuerySchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description: "Packages fetched successfully",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Location not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Failed to fetch packages",
+      },
+    },
+  }),
+
+  getPackagesByLocationController as any,
 );
