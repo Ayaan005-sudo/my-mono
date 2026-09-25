@@ -1,6 +1,6 @@
-import type { MasterTrek } from "@mono/database";
+import type { MasterTrek, ScheduleType } from "@mono/database";
 import { uuidv7 } from "uuidv7";
-import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput } from "../types/package.js";
+import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput } from "../types/package.js";
 import { prisma } from "../utils/prisma.js";
 
 export const createPackage = async (
@@ -536,3 +536,174 @@ export const updatePackageInclusions = async (
   });
 };
 
+export const createPackageSchedule = async (
+  packageId: string,
+  input: CreatePackageScheduleInput,
+) => {
+  return prisma.packageSchedule.create({
+    data: {
+      id: uuidv7(),
+      packageId,
+
+      startDate: input.startDate,
+      endDate: input.endDate,
+
+      bookingStartDate: input.bookingStartDate,
+      bookingEndDate: input.bookingEndDate,
+
+      price: input.price ?? null,
+adultPrice: input.adultPrice ?? null,
+childPrice: input.childPrice ?? null,
+
+            allowPartialPayment:
+              input.allowPartialPayment ?? false,
+            depositType: input.allowPartialPayment
+              ? input.depositType ?? null
+              : null,
+            depositValue: input.allowPartialPayment
+              ? input.depositValue ?? null
+              : null,
+            balanceDueDaysBeforeStart:
+              input.allowPartialPayment
+                ? input.balanceDueDaysBeforeStart ?? null
+                : null,
+
+currency: input.currency ?? "INR",
+
+      minParticipants: input.minParticipants,
+      maxParticipants: input.maxParticipants,
+      availableSeats: input.maxParticipants,
+
+      cancellationPolicy: input.cancellationPolicy,
+    },
+  });
+};
+
+export const findPackageSchedules = async (
+  packageId: string,
+) => {
+  return prisma.packageSchedule.findMany({
+    where: {
+      packageId,
+    },
+
+    orderBy: {
+      startDate: "asc",
+    },
+  });
+};
+
+export const findPackageScheduleById = async (
+  scheduleId: string,
+) => {
+  return prisma.packageSchedule.findUnique({
+    where: {
+      id: scheduleId,
+    },
+  });
+};
+
+export const updatePackageSchedule = async (
+  scheduleId: string,
+  input: UpdatePackageScheduleInput,
+) => {
+  const paymentPolicyData =
+    input.allowPartialPayment === false
+      ? {
+          allowPartialPayment: false,
+          depositType: null,
+          depositValue: null,
+          balanceDueDaysBeforeStart: null,
+        }
+      : {
+          ...(input.allowPartialPayment !== undefined && {
+            allowPartialPayment: input.allowPartialPayment,
+          }),
+          ...(input.depositType !== undefined && {
+            depositType: input.depositType,
+          }),
+          ...(input.depositValue !== undefined && {
+            depositValue: input.depositValue,
+          }),
+          ...(input.balanceDueDaysBeforeStart !== undefined && {
+            balanceDueDaysBeforeStart:
+              input.balanceDueDaysBeforeStart,
+          }),
+        };
+
+  return prisma.packageSchedule.update({
+    where: {
+      id: scheduleId,
+    },
+
+    data: {
+      ...paymentPolicyData,
+
+      ...(input.startDate !== undefined && {
+        startDate: input.startDate,
+      }),
+
+      ...(input.endDate !== undefined && {
+        endDate: input.endDate,
+      }),
+
+      ...(input.bookingStartDate !== undefined && {
+        bookingStartDate: input.bookingStartDate,
+      }),
+
+      ...(input.bookingEndDate !== undefined && {
+        bookingEndDate: input.bookingEndDate,
+      }),
+
+     ...(input.price !== undefined && {
+  price: input.price,
+}),
+
+...(input.adultPrice !== undefined && {
+  adultPrice: input.adultPrice,
+}),
+
+...(input.childPrice !== undefined && {
+  childPrice: input.childPrice,
+}),
+
+      ...(input.currency !== undefined && {
+        currency: input.currency,
+      }),
+
+      ...(input.minParticipants !== undefined && {
+        minParticipants: input.minParticipants,
+      }),
+
+      ...(input.maxParticipants !== undefined && {
+        maxParticipants: input.maxParticipants,
+      }),
+
+      ...(input.cancellationPolicy !== undefined && {
+        cancellationPolicy: input.cancellationPolicy,
+      }),
+    },
+  });
+};
+
+
+export const updatePackageScheduleType = async (
+  packageId: string,
+  scheduleType: ScheduleType,
+) => {
+  return prisma.package.update({
+    where: {
+      id: packageId,
+    },
+
+    data: {
+      scheduleType,
+    },
+
+    select: {
+      id: true,
+      scheduleType: true,
+      updatedAt: true,
+    },
+  });
+};

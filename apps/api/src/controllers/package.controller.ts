@@ -1,8 +1,8 @@
 import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
-import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput } from "../types/index.js";
-import { addPackageItineraryDayService, createPackageItineraryService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService } from "../services/package.service.js";
+import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
+import { addPackageItineraryDayService, createPackageItineraryService, createPackageScheduleService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
 
 export const createPackage = async (
@@ -500,6 +500,226 @@ export const updatePackageInclusionsController = async (
 
     return ApiResponse.error(
       "Failed to update package inclusions and requirements",
+      500,
+    ).send(c);
+  }
+};
+
+export const createPackageScheduleController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+   const body = c.req.valid("json" as never);
+
+    const result =
+      await createPackageScheduleService(
+        userId,
+        packageId,
+        body,
+      );
+
+    logger.info(
+      { userId, packageId },
+      "Package schedule created successfully",
+    );
+
+    return ApiResponse.success(
+      "Package schedule created successfully",
+      result,
+      201,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to create package schedule",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+ 
+    return ApiResponse.error(
+      "Failed to create package schedule",
+      500,
+    ).send(c);
+  }
+};
+
+export const getPackageSchedulesController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await getPackageSchedulesService(
+        userId,
+        packageId,
+      );
+
+    logger.info(
+      { userId, packageId },
+      "Package schedules fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Package schedules fetched successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to fetch package schedules",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to fetch package schedules",
+      500,
+    ).send(c);
+  }
+};
+
+export const updatePackageScheduleController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+    const scheduleId = c.req.param("scheduleId");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    if (!scheduleId) {
+      return ApiResponse.error(
+        "Schedule ID is required",
+        400,
+      ).send(c);
+    }
+
+    const body =
+      await c.req.json<UpdatePackageScheduleInput>();
+
+    const result =
+      await updatePackageScheduleService(
+        userId,
+        packageId,
+        scheduleId,
+        body,
+      );
+
+    logger.info(
+      { userId, packageId, scheduleId },
+      "Package schedule updated successfully",
+    );
+
+    return ApiResponse.success(
+      "Package schedule updated successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to update package schedule",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to update package schedule",
+      500,
+    ).send(c);
+  }
+};
+
+export const updatePackageScheduleTypeController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    const body =
+      await c.req.json<UpdatePackageScheduleTypeInput>();
+
+    const result =
+      await updatePackageScheduleTypeService(
+        userId,
+        packageId,
+        body,
+      );
+
+    logger.info(
+      { userId, packageId },
+      "Package schedule type updated successfully",
+    );
+
+    return ApiResponse.success(
+      "Package schedule type updated successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to update package schedule type",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to update package schedule type",
       500,
     ).send(c);
   }

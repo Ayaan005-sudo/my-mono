@@ -1,5 +1,5 @@
-import type { Difficulty, PackageStatus } from "@mono/database";
-import type { CreatePackageItinerarySchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema } from "../validators/package.validator.js";
+import type { DepositType, Difficulty, PackageStatus, ScheduleStatus, ScheduleType } from "@mono/database";
+import type { CreatePackageItinerarySchema, CreatePackageScheduleSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 import z from "zod";
 
 export type CreatePackageInput = {
@@ -196,5 +196,132 @@ export type UpdatePackageInclusionsResponse = {
 
   fitnessAndExperienceRequirement: string | null;
 
+  updatedAt: Date;
+};
+
+export type CreatePackageScheduleInput =
+  z.infer<typeof CreatePackageScheduleSchema>;
+
+export type CreatePackageScheduleResponse = {
+  id: string;
+  packageId: string;
+
+  startDate: Date;
+  endDate: Date;
+
+  bookingStartDate: Date | null;
+  bookingEndDate: Date | null;
+
+  price: number | null;
+adultPrice: number | null;
+childPrice: number | null;
+currency: string;
+
+  allowPartialPayment: boolean;
+  depositType: DepositType | null;
+  depositValue: number | null;
+  balanceDueDaysBeforeStart: number | null;
+
+  minParticipants: number;
+  maxParticipants: number;
+  availableSeats: number;
+
+  cancellationPolicy: string | null;
+
+  status: ScheduleStatus;
+
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type PackageScheduleDisplayStatus =
+  | "NEW"
+  | "AVAILABLE"
+  | "SOLD_OUT"
+  | "EXPIRED"
+  | "CANCELLED"
+  | "CLOSED"
+  | "COMPLETED";
+
+export type GetPackageSchedulesResponse = {
+  id: string;
+  packageId: string;
+
+  startDate: Date;
+  endDate: Date;
+
+  bookingStartDate: Date | null;
+  bookingEndDate: Date | null;
+
+  price: number | null;
+adultPrice: number | null;
+childPrice: number | null;
+currency: string;
+
+  allowPartialPayment: boolean;
+  depositType: DepositType | null;
+  depositValue: number | null;
+  balanceDueDaysBeforeStart: number | null;
+
+  minParticipants: number;
+  maxParticipants: number;
+  availableSeats: number;
+
+  cancellationPolicy: string | null;
+
+  status: ScheduleStatus;
+  displayStatus: PackageScheduleDisplayStatus;
+
+  publishedAt: Date | null;
+  cancelledAt: Date | null;
+  cancellationReason: string | null;
+
+  createdAt: Date;
+  updatedAt: Date;
+}[];
+
+
+export type UpdatePackageScheduleInput =
+  z.infer<typeof UpdatePackageScheduleSchema>;
+
+export type UpdatePackageScheduleResponse = {
+  id: string;
+  packageId: string;
+
+  startDate: Date;
+  endDate: Date;
+
+  bookingStartDate: Date | null;
+  bookingEndDate: Date | null;
+
+  price: number | null;
+  adultPrice: number | null;
+  childPrice: number | null;
+  currency: string;
+
+  allowPartialPayment: boolean;
+  depositType: DepositType | null;
+  depositValue: number | null;
+  balanceDueDaysBeforeStart: number | null;
+
+  minParticipants: number;
+  maxParticipants: number;
+  availableSeats: number;
+
+  cancellationPolicy: string | null;
+
+  status: ScheduleStatus;
+
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+
+export type UpdatePackageScheduleTypeInput =
+  z.infer<typeof UpdatePackageScheduleTypeSchema>;
+
+export type UpdatePackageScheduleTypeResponse = {
+  id: string;
+  scheduleType: ScheduleType;
   updatedAt: Date;
 };

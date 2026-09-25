@@ -294,3 +294,131 @@ export const AddPackageItineraryDaySchema =
   }),
 });
 
+export const CreatePackageScheduleSchema = z.object({
+  startDate: z.coerce.date().openapi({
+    example: "2026-05-03T00:00:00.000Z",
+  }),
+
+  endDate: z.coerce.date().openapi({
+    example: "2026-05-08T00:00:00.000Z",
+  }),
+
+  bookingStartDate: z.coerce.date().optional().openapi({
+    example: "2026-03-01T00:00:00.000Z",
+  }),
+
+  bookingEndDate: z.coerce.date().optional().openapi({
+    example: "2026-05-01T00:00:00.000Z",
+  }),
+
+  price: z.number().positive().optional().openapi({
+    example: 16500,
+  }),
+
+  adultPrice: z.number().positive().optional().openapi({
+    example: 16500,
+  }),
+
+  childPrice: z.number().positive().optional().openapi({
+    example: 12000,
+  }),
+
+  allowPartialPayment: z.boolean().optional().default(false).openapi({
+    example: true,
+  }),
+
+  depositType: z.enum(["PERCENTAGE", "FIXED"]).optional().openapi({
+    example: "PERCENTAGE",
+  }),
+
+  depositValue: z.number().positive().optional().openapi({
+    example: 25,
+  }),
+
+  balanceDueDaysBeforeStart: z.number().int().positive().optional().openapi({
+    example: 7,
+  }),
+
+  currency: z.string().optional().openapi({
+    example: "INR",
+  }),
+
+  minParticipants: z.number().int().positive().openapi({
+    example: 5,
+  }),
+
+  maxParticipants: z.number().int().positive().openapi({
+    example: 12,
+  }),
+
+  cancellationPolicy: z.string().optional().openapi({
+    example: "Free cancellation up to 7 days before departure.",
+  }),
+});
+
+export const UpdatePackageScheduleSchema = z.object({
+  startDate: z.coerce.date().optional().openapi({
+    example: "2026-05-10T00:00:00.000Z",
+  }),
+
+  endDate: z.coerce.date().optional().openapi({
+    example: "2026-05-15T00:00:00.000Z",
+  }),
+
+  bookingStartDate: z.coerce.date().optional().openapi({
+    example: "2026-03-01T00:00:00.000Z",
+  }),
+
+  bookingEndDate: z.coerce.date().optional().openapi({
+    example: "2026-05-08T00:00:00.000Z",
+  }),
+
+  price: z.number().positive().nullable().optional().openapi({
+  example: 18000,
+}),
+
+adultPrice: z.number().positive().nullable().optional().openapi({
+  example: 18000,
+}),
+
+childPrice: z.number().positive().nullable().optional().openapi({
+  example: 13000,
+}),
+
+  allowPartialPayment: z.boolean().optional().openapi({
+    example: false,
+  }),
+
+  depositType: z.enum(["PERCENTAGE", "FIXED"]).nullable().optional().openapi({
+    example: "PERCENTAGE",
+  }),
+
+  depositValue: z.number().positive().nullable().optional().openapi({
+    example: 25,
+  }),
+
+  balanceDueDaysBeforeStart: z.number().int().positive().nullable().optional().openapi({
+    example: 7,
+  }),
+  currency: z.string().optional().openapi({
+    example: "INR",
+  }),
+
+  minParticipants: z.number().int().positive().optional().openapi({
+    example: 5,
+  }),
+
+  maxParticipants: z.number().int().positive().optional().openapi({
+    example: 15,
+  }),
+
+  cancellationPolicy: z.string().optional().openapi({
+    example: "Free cancellation up to 5 days before departure.",
+  }),
+});
+
+export const UpdatePackageScheduleTypeSchema = z.object({
+  scheduleType: z.enum(["FIXED", "FLEXIBLE"]).openapi({
+    example: "FIXED",
+  }),
+});
