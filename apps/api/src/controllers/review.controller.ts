@@ -3,7 +3,7 @@ import ApiResponse from "../utils/api-response.js";
 import { Context } from "hono";
 import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
-import { createReviewService, deleteReviewService, getPackageReviewsService, updateReviewService } from "../services/review.service.js";
+import { createReviewService, deleteReviewService, getPackageReviewsService, getVendorReviewsService, updateReviewService } from "../services/review.service.js";
 import type { CreateReviewInput, ReviewPaginationQuery, UpdateReviewInput } from "../types/index.js";
 
  
@@ -294,6 +294,87 @@ export const getPackageReviewsController = async (
 
     return ApiResponse.error(
       "Failed to fetch package reviews",
+      500,
+    ).send(c);
+  }
+};
+
+
+export const getVendorReviewsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId =
+      c.req.param("userId");
+
+    if (!userId) {
+      logger.warn(
+        "Get vendor reviews failed: vendor ID is required",
+      );
+
+      return ApiResponse.error(
+        "Vendor ID is required",
+        400,
+      ).send(c);
+    }
+
+    const query: ReviewPaginationQuery = {
+      limit: Number(
+        c.req.query("limit") ?? 10,
+      ),
+      cursor:
+        c.req.query("cursor") || undefined,
+    };
+
+    const result =
+      await getVendorReviewsService(
+        userId,
+        query,
+      );
+
+    logger.info(
+      {
+        userId,
+        limit: query.limit,
+        cursor: query.cursor,
+      },
+      "Vendor reviews fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Vendor reviews fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      logger.warn(
+        {
+          error,
+          userId:
+            c.req.param("userId"),
+        },
+        "Failed to fetch vendor reviews",
+      );
+
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    logger.error(
+      {
+        error,
+        userId:
+          c.req.param("userId"),
+      },
+      "Failed to fetch vendor reviews",
+    );
+
+    return ApiResponse.error(
+      "Failed to fetch vendor reviews",
       500,
     ).send(c);
   }

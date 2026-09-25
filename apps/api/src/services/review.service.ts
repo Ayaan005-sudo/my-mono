@@ -1,4 +1,4 @@
-import { createReview, deleteReview, findBookingForReview, findReviewById, findReviewsByPackageId, findReviewSummaryByPackageId, updateReview } from "../repositories/review.repository.js";
+import { createReview, deleteReview, findBookingForReview, findReviewById, findReviewsByPackageId, findReviewsByVendorId, findReviewSummaryByPackageId, findReviewSummaryByVendorId, updateReview } from "../repositories/review.repository.js";
 import type { CreateReviewInput, CreateReviewResponse, GetReviewsResponse, ReviewListItem, ReviewPaginationQuery, ReviewSummary, UpdateReviewInput, UpdateReviewResponse } from "../types/review.js";
 import { CustomError } from "../utils/custom-error.js";
 
@@ -172,3 +172,27 @@ export const getPackageReviewsService = async (
       ),
   );
 };
+
+
+export const getVendorReviewsService = async (
+  vendorId: string,
+  query: ReviewPaginationQuery,
+): Promise<GetReviewsResponse> => {
+  return buildReviewsResponse(
+    query,
+
+    (limit, cursor) =>
+      findReviewsByVendorId(
+        vendorId,
+        limit,
+        cursor,
+      ),
+
+    () =>
+      findReviewSummaryByVendorId(
+        vendorId,
+      ),
+  );
+};
+
+

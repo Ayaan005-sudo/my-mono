@@ -4,8 +4,8 @@ import {
   z,
 } from "@hono/zod-openapi";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { createReviewController, deleteReviewController, getPackageReviewsController, updateReviewController } from "../controllers/review.controller.js";
-import { CreateReviewSchema, PackageReviewParamSchema, ReviewIdParamSchema, ReviewPaginationQuerySchema, UpdateReviewSchema } from "../validators/review.validator.js";
+import { createReviewController, deleteReviewController, getPackageReviewsController, getVendorReviewsController, updateReviewController } from "../controllers/review.controller.js";
+import { CreateReviewSchema, PackageReviewParamSchema, ReviewIdParamSchema, ReviewPaginationQuerySchema, UpdateReviewSchema, VendorReviewParamSchema } from "../validators/review.validator.js";
 
 
 export const ReviewRoutes = new OpenAPIHono();
@@ -345,4 +345,33 @@ ReviewRoutes.openapi(
     },
   }),
   getPackageReviewsController as any,
+);
+
+
+ReviewRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/vendor/{userId}",
+    tags: ["Review"],
+    summary: "Get reviews for a vendor",
+    request: {
+      params: VendorReviewParamSchema,
+      query: ReviewPaginationQuerySchema,
+    },
+    responses: {
+      200: {
+        content: { "application/json": { schema: SuccessSchema } },
+        description: "Vendor reviews fetched successfully",
+      },
+      404: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Vendor not found",
+      },
+      500: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Failed to fetch vendor reviews",
+      },
+    },
+  }),
+  getVendorReviewsController as any,
 );

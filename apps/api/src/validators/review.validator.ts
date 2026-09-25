@@ -180,3 +180,9 @@ export const PackageReviewParamSchema = z.object({
     example: "01a0c996-ea06-7706-b4eb-2834a5889a13",
   }),
 });
+
+export const VendorReviewParamSchema = z.object({
+  userId: z.string().min(1, "User ID is required").openapi({
+    example: "01a0c996-ea06-7706-b4eb-2834a5889a13",
+  }),
+});

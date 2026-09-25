@@ -272,3 +272,13 @@ export const findReviewsByPackageId = (
   );
   return findReviews({ packageId }, limit, cursor);
 } 
+
+export const findReviewsByVendorId = (
+  vendorId: string,
+  limit: number,
+  cursor?: string,
+) => findReviews({ package: { createdByUserId: vendorId } }, limit, cursor);
+
+
+export const findReviewSummaryByVendorId = (vendorId: string) =>
+  getSummary({ package: { createdByUserId: vendorId } });
