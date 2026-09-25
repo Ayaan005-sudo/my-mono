@@ -36,7 +36,7 @@ import {
   updatePackageSchedule,
   updatePackageScheduleType,
 } from "../repositories/package.repository.js";
-import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeactivatePackageResponse, DeletePackageItineraryDayResponse, GetMyActivitiesQuery, GetMyActivitiesResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, LocationPackagesQuery, OpenPackageScheduleResponse, PackageScheduleDisplayStatus, PublicPackageDetail, PublicPackageSearchItem, PublishPackageResponse, SearchPackagesQuery, SearchPackagesResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
+import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeactivatePackageResponse, DeletePackageItineraryDayResponse, GetMyActivitiesQuery, GetMyActivitiesResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, LocationPackagesQuery, OpenPackageScheduleResponse, PackageCreationContext, PackageScheduleDisplayStatus, PublicPackageDetail, PublicPackageSearchItem, PublishPackageResponse, SearchPackagesQuery, SearchPackagesResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -1654,3 +1654,118 @@ currency: schedule.currency,
     },
   }));
 };
+
+
+export const getPackageCreationContextsService = async (
+  userId: string,
+): Promise<PackageCreationContext[]> => {
+  const VENDOR_CAPABILITY = {
+  LOCAL_TRAIL_GUIDE: {
+    rank: 1,
+    maxDifficulty: "EASY",
+  },
+
+  ACTIVITY_HOST: {
+    rank: 1,
+    maxDifficulty: "EASY",
+  },
+
+  CAMP_OPERATOR: {
+    rank: 1,
+    maxDifficulty: "EASY",
+  },
+
+  TREK_LEADER: {
+    rank: 2,
+    maxDifficulty: "MODERATE",
+  },
+
+  EXPERIENCE_ORGANIZER: {
+    rank: 2,
+    maxDifficulty: "MODERATE",
+  },
+
+  MOUNTAINEER: {
+    rank: 3,
+    maxDifficulty: "PRO",
+  },
+} as const;
+  const vendor =
+    await getVendorPackageCreationProfile(userId);
+
+  if (
+    !vendor ||
+    !vendor.vendorProfile ||
+    vendor.vendorProfile.verificationStatus !== "APPROVED" ||
+    !vendor.vendorProfile.vendorType
+  ) {
+    throw new CustomError(
+      "Approved vendor profile is required",
+      403,
+    );
+  }
+
+  const vendorType =
+    vendor.vendorProfile.vendorType;
+
+  const individualCapability =
+    VENDOR_CAPABILITY[vendorType];
+
+  const contexts: PackageCreationContext[] = [
+    {
+      type: "INDIVIDUAL",
+      teamId: null,
+      name: vendor.name,
+      logoUrl: vendor.avatarUrl,
+      vendorType,
+      maxDifficulty:
+        individualCapability.maxDifficulty,
+    },
+  ];
+
+  const memberships =
+    await getVendorActiveTeamsForPackageCreation(
+      userId,
+    );
+
+  for (const membership of memberships) {
+    let highestVendorType:
+      keyof typeof VENDOR_CAPABILITY | null = null;
+
+    let highestRank = 0;
+
+    for (const member of membership.team.members) {
+      const memberVendorType =
+        member.user.vendorProfile?.vendorType;
+
+      if (!memberVendorType) {
+        continue;
+      }
+
+      const capability =
+        VENDOR_CAPABILITY[memberVendorType];
+
+      if (capability.rank > highestRank) {
+        highestRank = capability.rank;
+        highestVendorType = memberVendorType;
+      }
+    }
+
+    if (!highestVendorType) {
+      continue;
+    }
+
+    contexts.push({
+      type: "TEAM",
+      teamId: membership.team.id,
+      name: membership.team.name,
+      logoUrl: membership.team.logoUrl,
+      highestVendorType,
+      maxDifficulty:
+        VENDOR_CAPABILITY[highestVendorType]
+          .maxDifficulty,
+    });
+  }
+
+  return contexts;
+}

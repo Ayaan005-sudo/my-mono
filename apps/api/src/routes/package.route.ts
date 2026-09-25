@@ -4,7 +4,7 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deactivatePackageController, deletePackageItineraryDayController, getMyActivitiesController, getPackageItinerary, getPackageRoutes, getPackagesByLocationController, getPackageSchedulesController, getPublicPackageDetailController, getUpcomingDeparturesController, openPackageScheduleController, publishPackageController, searchPublicPackagesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
+import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deactivatePackageController, deletePackageItineraryDayController, getMyActivitiesController, getPackageCreationContextsController, getPackageItinerary, getPackageRoutes, getPackagesByLocationController, getPackageSchedulesController, getPublicPackageDetailController, getUpcomingDeparturesController, openPackageScheduleController, publishPackageController, searchPublicPackagesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
 import { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetMyActivitiesQuerySchema, GetPackageRoutesParamsSchema, LocationIdParamSchema, LocationPackagesQuerySchema, PackageItineraryDaySchema, PublicPackageDetailParamSchema, SearchPackagesQuerySchema, UpcomingDeparturesQuerySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 
 
@@ -2160,4 +2160,67 @@ PackageRoutes.openapi(
     },
   }),
   getUpcomingDeparturesController as any,
+);
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/creation-contexts",
+    tags: ["Package"],
+    summary: "Get available package creation contexts",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package creation contexts fetched successfully",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Approved vendor profile is required",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch package creation contexts",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  getPackageCreationContextsController as any,
 );

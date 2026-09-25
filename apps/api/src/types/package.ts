@@ -564,3 +564,26 @@ export type LocationPackagesQuery = z.infer<
 
 export type UpcomingDeparturesQuery =
   z.infer<typeof UpcomingDeparturesQuerySchema>;
+
+
+  export type IndividualPackageCreationContext = {
+  type: "INDIVIDUAL";
+  teamId: null;
+  name: string | null;
+  logoUrl: string | null;
+  vendorType: string;
+  maxDifficulty: string;
+};
+
+export type TeamPackageCreationContext = {
+  type: "TEAM";
+  teamId: string;
+  name: string;
+  logoUrl: string | null;
+  highestVendorType: string;
+  maxDifficulty: string;
+};
+
+export type PackageCreationContext =
+  | IndividualPackageCreationContext
+  | TeamPackageCreationContext;

@@ -2,7 +2,7 @@ import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
 import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpcomingDeparturesQuery, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
-import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageItineraryService, getPackageRoutesService, getPackagesByLocationService, getPackageSchedulesService, getPublicPackageDetailService, getUpcomingDeparturesService, openPackageScheduleService, publishPackageService, searchPublicPackagesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
+import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageCreationContextsService, getPackageItineraryService, getPackageRoutesService, getPackagesByLocationService, getPackageSchedulesService, getPublicPackageDetailService, getUpcomingDeparturesService, openPackageScheduleService, publishPackageService, searchPublicPackagesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
 import { GetMyActivitiesQuerySchema, LocationPackagesQuerySchema, SearchPackagesQuerySchema } from "../validators/package.validator.js";
 
@@ -1235,3 +1235,46 @@ export const getUpcomingDeparturesController = async (
     ).send(c);
   }
 };
+
+
+export const getPackageCreationContextsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+
+    const result =
+      await getPackageCreationContextsService(
+        userId,
+      );
+
+    logger.info(
+      { userId },
+      "Package creation contexts fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Package creation contexts fetched successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to fetch package creation contexts",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to fetch package creation contexts",
+      500,
+    ).send(c);
+  }
+};
+
