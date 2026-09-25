@@ -95,7 +95,7 @@ export const getVendorApplicationByUserId = async (
   });
 };
 
-export const approveVendorApplicationRepo = async (
+export const approveVendorApplication = async (
   userId: string,
 ): Promise<VendorReviewResponse> => {
   return prisma.$transaction(async (tx) => {
