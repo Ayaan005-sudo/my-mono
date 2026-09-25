@@ -1,7 +1,7 @@
 import { sendVendorOnboardingInvitationEmail } from "../lib/email.service.js";
 import { findVendorProfileByUserId } from "../repositories/onboarding.repository.js";
-import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findTeamPublicProfileById, findUserByEmail, getActiveTeamMembers, getMyPendingTeamInvitations, getTeamDetailsById, rejectTeamInvitation, searchApprovedVendors, updateTeam } from "../repositories/team.repository.js";
-import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamDetailsResponse, TeamInvitationActionResponse, TeamInvitationResponse, TeamMemberResponse, TeamPublicProfileResponse, TeamVendorSearchResult, UpdateTeamInput, UpdateTeamResponse, VendorOnboardingInvitationResponse } from "../types/index.js";
+import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findTeamPublicProfileById, findUserByEmail, getActiveTeamMembers, getMyPendingTeamInvitations, getTeamBookingsData, getTeamDashboardData, getTeamDetailsById, rejectTeamInvitation, searchApprovedVendors, updateTeam } from "../repositories/team.repository.js";
+import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamBookingsQuery, TeamBookingsResponse, TeamDashboardResponse, TeamDetailsResponse, TeamInvitationActionResponse, TeamInvitationResponse, TeamMemberResponse, TeamPublicProfileResponse, TeamVendorSearchResult, UpdateTeamInput, UpdateTeamResponse, VendorOnboardingInvitationResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 export const createTeamService = async (
@@ -393,4 +393,190 @@ export const getTeamPublicProfileService = async (
   }
 
   return team;
+};
+
+export const getTeamDashboardService = async (
+  userId: string,
+  teamId: string,
+): Promise<TeamDashboardResponse> => {
+
+
+  console.log("TEAM ACCESS CHECK:", {
+  teamId,
+  userId,
+});
+
+
+  
+  const member =
+    await findTeamMember(
+      teamId,
+      userId,
+    );
+
+    console.log("TEAM MEMBER FOUND:", member);
+
+  if (
+    !member ||
+    member.status !== "ACTIVE"
+  ) {
+    throw new CustomError(
+      "You are not authorized to access this team",
+      403,
+    );
+  }
+
+  const now = new Date();
+
+  const data =
+    await getTeamDashboardData(
+      teamId,
+      now,
+    );
+
+  const totalEarnings =
+    data.successfulPayments.reduce(
+      (total, payment) =>
+        total + payment.amount,
+      0,
+    );
+
+  const totalTrekkers =
+    data.confirmedBookingParticipants.reduce(
+      (total, booking) =>
+        total +
+        booking.adultCount +
+        booking.childCount,
+      0,
+    );
+
+  // Last 6 months including current month
+  const revenueTrend: {
+    period: string;
+    revenue: number;
+  }[] = [];
+
+  for (let i = 5; i >= 0; i--) {
+    const date = new Date(
+      now.getFullYear(),
+      now.getMonth() - i,
+      1,
+    );
+
+    const year = date.getFullYear();
+
+    const month = String(
+      date.getMonth() + 1,
+    ).padStart(2, "0");
+
+    revenueTrend.push({
+      period: `${year}-${month}`,
+      revenue: 0,
+    });
+  }
+
+  for (const payment of
+    data.successfulPayments) {
+    if (!payment.paidAt) continue;
+
+    const year =
+      payment.paidAt.getFullYear();
+
+    const month = String(
+      payment.paidAt.getMonth() + 1,
+    ).padStart(2, "0");
+
+    const period = `${year}-${month}`;
+
+    const item =
+      revenueTrend.find(
+        (entry) =>
+          entry.period === period,
+      );
+
+    if (item) {
+      item.revenue += payment.amount;
+    }
+  }
+
+  return {
+    stats: {
+      totalEarnings,
+
+      activeTreks:
+        data.activeTreksCount,
+
+      pendingBookings:
+        data.pendingBookingsCount,
+
+      totalTrekkers,
+    },
+
+    revenueTrend,
+
+    pendingBookings:
+      data.pendingBookings,
+
+    activeTreks:
+      data.activeTreks,
+  };
+};
+
+export const getTeamBookingsService = async (
+  userId: string,
+  teamId: string,
+  query: TeamBookingsQuery,
+): Promise<TeamBookingsResponse> => {
+  const member =
+    await findTeamMember(
+      teamId,
+      userId,
+    );
+
+  if (
+    !member ||
+    member.status !== "ACTIVE"
+  ) {
+    throw new CustomError(
+      "You are not authorized to access this team",
+      403,
+    );
+  }
+
+  const data =
+    await getTeamBookingsData(
+      teamId,
+      query,
+      new Date(),
+    );
+
+  const hasNextPage =
+    data.bookings.length >
+    query.limit;
+
+  const bookings =
+    hasNextPage
+      ? data.bookings.slice(
+          0,
+          query.limit,
+        )
+      : data.bookings;
+
+  const nextCursor =
+    hasNextPage &&
+    bookings.length > 0
+      ? bookings[
+          bookings.length - 1
+        ].bookingId
+      : null;
+
+  return {
+    ...data,
+
+    bookings,
+
+    nextCursor,
+
+    hasNextPage,
+  };
 };

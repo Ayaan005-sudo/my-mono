@@ -4,7 +4,7 @@ import * as TeamService from "../services/team.service.js";
 import ApiResponse from "../utils/api-response.js";
 import { CustomError } from "../utils/custom-error.js";
 import { logger } from "../utils/logger.js";
-import { acceptTeamInvitationService, getMyTeamInvitationsService, getTeamDetailsService, getTeamMembersService, getTeamPublicProfileService, inviteTeamVendorService, inviteVendorOnboardingService, rejectTeamInvitationService, searchTeamVendorsService, updateTeamService } from "../services/team.service.js";
+import { acceptTeamInvitationService, getMyTeamInvitationsService, getTeamBookingsService, getTeamDashboardService, getTeamDetailsService, getTeamMembersService, getTeamPublicProfileService, inviteTeamVendorService, inviteVendorOnboardingService, rejectTeamInvitationService, searchTeamVendorsService, updateTeamService } from "../services/team.service.js";
 
 export const createTeam = async (
   c: Context,
@@ -456,6 +456,154 @@ export const getTeamPublicProfileController = async (
 
     return ApiResponse.error(
       "Failed to fetch team profile",
+      500,
+    ).send(c);
+  }
+};
+
+export const getTeamDashboardController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const teamId = c.req.param("teamId");
+
+    if (!teamId) {
+      logger.warn(
+        { userId },
+        "Get team dashboard failed: team ID is required",
+      );
+
+      return ApiResponse.error(
+        "Team ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await getTeamDashboardService(
+        userId,
+        teamId,
+      );
+
+    logger.info(
+      {
+        userId,
+        teamId,
+      },
+      "Team dashboard fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Team dashboard fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      logger.warn(
+        {
+          error,
+          userId: c.get("userId"),
+          teamId: c.req.param("teamId"),
+        },
+        "Failed to fetch team dashboard",
+      );
+
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    logger.error(
+      {
+        error,
+        userId: c.get("userId"),
+        teamId: c.req.param("teamId"),
+      },
+      "Failed to fetch team dashboard",
+    );
+
+    return ApiResponse.error(
+      "Failed to fetch team dashboard",
+      500,
+    ).send(c);
+  }
+};
+
+export const getTeamBookingsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const teamId = c.req.param("teamId");
+
+    if (!teamId) {
+      logger.warn(
+        { userId },
+        "Get team bookings failed: team ID is required",
+      );
+
+      return ApiResponse.error(
+        "Team ID is required",
+        400,
+      ).send(c);
+    }
+
+    const query =
+      c.req.valid("query" as never);
+
+    const result =
+      await getTeamBookingsService(
+        userId,
+        teamId,
+        query,
+      );
+
+    logger.info(
+      {
+        userId,
+        teamId,
+      },
+      "Team bookings fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Team bookings fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      logger.warn(
+        {
+          error,
+          userId: c.get("userId"),
+          teamId: c.req.param("teamId"),
+        },
+        "Failed to fetch team bookings",
+      );
+
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    logger.error(
+      {
+        error,
+        userId: c.get("userId"),
+        teamId: c.req.param("teamId"),
+      },
+      "Failed to fetch team bookings",
+    );
+
+    return ApiResponse.error(
+      "Failed to fetch team bookings",
       500,
     ).send(c);
   }

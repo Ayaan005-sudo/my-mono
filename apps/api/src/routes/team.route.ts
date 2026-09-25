@@ -1,7 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { acceptTeamInvitationController, createTeam, getMyTeamInvitationsController, getTeamDetailsController, getTeamMembersController, getTeamPublicProfileController, inviteTeamVendorController, inviteVendorOnboardingController, rejectTeamInvitationController, searchTeamVendorsController, updateTeamController } from "../controllers/team.controller.js";
+import { acceptTeamInvitationController, createTeam, getMyTeamInvitationsController, getTeamBookingsController, getTeamDashboardController, getTeamDetailsController, getTeamMembersController, getTeamPublicProfileController, inviteTeamVendorController, inviteVendorOnboardingController, rejectTeamInvitationController, searchTeamVendorsController, updateTeamController } from "../controllers/team.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema, TeamIdParamSchema, TeamInvitationParamSchema, UpdateTeamSchema } from "../validators/team.validator.js";
+import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema, TeamBookingsQuerySchema, TeamDashboardParamsSchema, TeamIdParamSchema, TeamInvitationParamSchema, UpdateTeamSchema } from "../validators/team.validator.js";
 
 export const teamRoutes = new OpenAPIHono();
 
@@ -917,3 +917,171 @@ teamRoutes.openapi(
 );
 
 
+teamRoutes.openapi(
+  createRoute({
+    method: "get",
+
+    path: "/{teamId}/dashboard",
+
+    tags: ["Team"],
+
+    summary:
+      "Get team dashboard",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params:
+        TeamDashboardParamsSchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Team dashboard fetched successfully",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Not an active team member",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Team not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch team dashboard",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  getTeamDashboardController as any,
+);
+
+teamRoutes.openapi(
+  createRoute({
+    method: "get",
+
+    path: "/{teamId}/bookings",
+
+    tags: ["Team"],
+
+    summary:
+      "Get team booking management data",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params:
+        TeamDashboardParamsSchema,
+
+      query:
+        TeamBookingsQuerySchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Team bookings fetched successfully",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Not an active team member",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Team not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch team bookings",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  getTeamBookingsController as any,
+);

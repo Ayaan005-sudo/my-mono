@@ -142,3 +142,37 @@ export const UpdateTeamSchema = z.object({
     .optional()
     .openapi({ example: "India" }),
 });
+
+
+export const TeamDashboardParamsSchema = z.object({
+  teamId: z
+    .string()
+    .min(1, "Team ID is required")
+    .openapi({
+      example: "01a0c26b-3311-71ee-a28b-993a58ba431c",
+    }),
+});
+
+export const TeamBookingsQuerySchema = z.object({
+  status: z
+    .enum([
+      "PENDING",
+      "CONFIRMED",
+      "CANCELLED",
+      "COMPLETED",
+    ])
+    .optional(),
+
+  packageId: z.string().optional(),
+
+  search: z.string().min(1).optional(),
+
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .default(10),
+
+  cursor: z.string().optional(),
+});

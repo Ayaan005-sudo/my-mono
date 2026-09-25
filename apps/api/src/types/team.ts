@@ -216,3 +216,132 @@ export type TeamPublicProfileResponse = {
 
   createdAt: Date;
 };
+export type TeamBookingsQuery = {
+  status?:
+    | "PENDING"
+    | "CONFIRMED"
+    | "CANCELLED"
+    | "COMPLETED";
+  packageId?: string;
+  search?: string;
+  limit: number;
+  cursor?: string;
+};
+
+export type TeamDashboardRepositoryData = {
+  successfulPayments: {
+    amount: number;
+    paidAt: Date | null;
+  }[];
+
+  confirmedBookingParticipants: {
+    adultCount: number;
+    childCount: number;
+  }[];
+
+  pendingBookingsCount: number;
+  activeTreksCount: number;
+
+  pendingBookings: {
+    bookingId: string;
+
+    trekker: {
+      id: string;
+      name: string | null;
+      avatarUrl: string | null;
+    };
+
+    package: {
+      id: string;
+      title: string | null;
+    };
+
+    participantCount: number;
+    totalAmount: number;
+    currency: string;
+    bookingStatus: string;
+    bookedAt: Date;
+  }[];
+
+  activeTreks: {
+    scheduleId: string;
+
+    package: {
+      id: string;
+      title: string | null;
+      galleryImages: string[];
+    };
+
+    startDate: Date;
+    endDate: Date;
+
+    bookedSeats: number;
+    availableSeats: number;
+    maxParticipants: number;
+
+    status: string;
+  }[];
+};
+
+export type TeamDashboardResponse = {
+  stats: {
+    totalEarnings: number;
+    activeTreks: number;
+    pendingBookings: number;
+    totalTrekkers: number;
+  };
+
+  revenueTrend: {
+    period: string;
+    revenue: number;
+  }[];
+
+  pendingBookings:
+    TeamDashboardRepositoryData["pendingBookings"];
+
+  activeTreks:
+    TeamDashboardRepositoryData["activeTreks"];
+};
+
+export type TeamBookingsRepositoryData = {
+  bookings: {
+    bookingId: string;
+
+    trekker: {
+      id: string;
+      name: string | null;
+      avatarUrl: string | null;
+    };
+
+    package: {
+      id: string;
+      title: string | null;
+    };
+
+    schedule: {
+      id: string;
+      startDate: Date;
+      endDate: Date;
+    };
+
+    adultCount: number;
+    childCount: number;
+    participantCount: number;
+
+    totalAmount: number;
+    currency: string;
+    status: string;
+    bookedAt: Date;
+  }[];
+
+  totalBookings: number;
+  pendingBookings: number;
+  confirmedRevenue: number;
+  upcomingTreks: number;
+};
+
+export type TeamBookingsResponse =
+  TeamBookingsRepositoryData & {
+    nextCursor: string | null;
+    hasNextPage: boolean;
+  };
