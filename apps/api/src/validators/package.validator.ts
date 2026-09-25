@@ -610,3 +610,13 @@ export const SearchPackagesQuerySchema = z.object({
     });
   }
 });
+
+
+export const PublicPackageDetailParamSchema = z.object({
+  id: z
+    .string()
+    .min(1, "Package ID is required")
+    .openapi({
+      example: "01a0b469-20fb-795b-98ca-89e931968a12",
+    }),
+});

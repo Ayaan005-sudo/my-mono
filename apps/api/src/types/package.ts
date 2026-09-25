@@ -443,3 +443,117 @@ export type SearchPackagesResponse = {
     totalPages: number;
   };
 };
+
+
+export type PublicPackageSchedule = {
+  id: string;
+  startDate: Date;
+  endDate: Date;
+
+  bookingStartDate: Date | null;
+  bookingEndDate: Date | null;
+
+  price: number | null;
+  adultPrice: number | null;
+  childPrice: number | null;
+  currency: string;
+
+  minParticipants: number;
+  maxParticipants: number;
+  availableSeats: number;
+
+  cancellationPolicy: string | null;
+};
+
+export type PublicPackageItineraryDay = {
+  id: string;
+  dayNumber: number;
+  title: string;
+  description: string | null;
+
+  startLocation: string | null;
+  endLocation: string | null;
+
+  distanceKm: number | null;
+  duration: string | null;
+  altitude: number | null;
+
+  imageUrls: string[];
+};
+
+export type PublicPackageNearbyPlace = {
+  id: string;
+  name: string;
+  description: string | null;
+
+  latitude: number | null;
+  longitude: number | null;
+  imageUrl: string | null;
+
+  distanceFromTrek: number | null;
+  travelTime: string | null;
+
+  location: {
+    id: string;
+    name: string;
+  } | null;
+};
+
+export type PublicPackageDetail = {
+  id: string;
+
+  title: string | null;
+  description: string | null;
+
+  galleryImages: string[];
+
+  location: {
+    id: string;
+    name: string;
+  } | null;
+
+  difficulty: Difficulty | null;
+  durationDays: number | null;
+  distanceKm: number | null;
+
+  trekLeader: {
+    id: string;
+    name: string | null;
+    avatarUrl: string | null;
+  };
+
+  itineraryDays: PublicPackageItineraryDay[];
+
+  inclusions: string[];
+  exclusions: string[];
+  packingList: string[];
+
+  fitnessAndExperienceRequirement: string | null;
+
+  meetingPoint: string | null;
+  instructions: string | null;
+
+  trekInfo: {
+    name: string;
+
+    overview: string | null;
+    howToReach: string | null;
+
+    fitnessInfo: string | null;
+    safetyInfo: string | null;
+    permitInfo: string | null;
+    sustainabilityInfo: string | null;
+
+    bestSeason: string | null;
+    beginnerFriendly: boolean;
+
+    maxAltitude: number | null;
+  };
+
+  nearbyPlaces: PublicPackageNearbyPlace[];
+
+  startingPrice: number | null;
+  currency: string | null;
+
+  schedules: PublicPackageSchedule[];
+};

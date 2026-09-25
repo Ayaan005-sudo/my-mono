@@ -1132,3 +1132,160 @@ const getScheduleDisplayPrice = (schedule: {
   return null;
 };
 
+export const findPublicPackageDetail = async (
+  packageId: string,
+) => {
+  const now = new Date();
+
+  return prisma.package.findFirst({
+    where: {
+      id: packageId,
+      status: "PUBLISHED",
+      visibility: "PUBLIC",
+    },
+
+    select: {
+      id: true,
+
+      title: true,
+      description: true,
+
+      galleryImages: true,
+
+      difficulty: true,
+      durationDays: true,
+      distanceKm: true,
+
+      inclusions: true,
+      exclusions: true,
+      packingList: true,
+
+      fitnessAndExperienceRequirement: true,
+
+      meetingPoint: true,
+      instructions: true,
+
+      location: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+
+      itineraryDays: {
+        orderBy: {
+          dayNumber: "asc",
+        },
+
+        select: {
+          id: true,
+          dayNumber: true,
+          title: true,
+          description: true,
+
+          startLocation: true,
+          endLocation: true,
+
+          distanceKm: true,
+          duration: true,
+          altitude: true,
+
+          imageUrls: true,
+        },
+      },
+
+      schedules: {
+        where: {
+          status: "OPEN",
+
+          startDate: {
+            gt: now,
+          },
+
+          availableSeats: {
+            gt: 0,
+          },
+        },
+
+        orderBy: {
+          startDate: "asc",
+        },
+
+        select: {
+          id: true,
+
+          startDate: true,
+          endDate: true,
+
+          bookingStartDate: true,
+          bookingEndDate: true,
+
+          price: true,
+          adultPrice: true,
+          childPrice: true,
+          currency: true,
+          
+
+          minParticipants: true,
+          maxParticipants: true,
+          availableSeats: true,
+
+          cancellationPolicy: true,
+        },
+      },
+
+      masterTrek: {
+        select: {
+          name: true,
+
+          overview: true,
+          howToReach: true,
+
+          fitnessInfo: true,
+          safetyInfo: true,
+          permitInfo: true,
+          sustainabilityInfo: true,
+
+          bestSeason: true,
+          beginnerFriendly: true,
+
+          maxAltitude: true,
+
+         nearbyPlaces: {
+  select: {
+    distanceFromTrek: true,
+    travelTime: true,
+
+    nearbyPlace: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        latitude: true,
+        longitude: true,
+        imageUrl: true,
+
+        location: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    },
+  },
+},
+        },
+      },
+    },
+  });
+}; 
+
