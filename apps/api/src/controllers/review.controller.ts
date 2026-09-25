@@ -3,8 +3,8 @@ import ApiResponse from "../utils/api-response.js";
 import { Context } from "hono";
 import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
-import { createReviewService, deleteReviewService, updateReviewService } from "../services/review.service.js";
-import type { CreateReviewInput, UpdateReviewInput } from "../types/index.js";
+import { createReviewService, deleteReviewService, getPackageReviewsService, updateReviewService } from "../services/review.service.js";
+import type { CreateReviewInput, ReviewPaginationQuery, UpdateReviewInput } from "../types/index.js";
 
  
 
@@ -214,6 +214,86 @@ export const deleteReviewController = async (
 
     return ApiResponse.error(
       "Failed to delete review",
+      500,
+    ).send(c);
+  }
+};
+
+export const getPackageReviewsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const packageId =
+      c.req.param("packageId");
+
+    if (!packageId) {
+      logger.warn(
+        "Get package reviews failed: package ID is required",
+      );
+
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    const query: ReviewPaginationQuery = {
+      limit: Number(
+        c.req.query("limit") ?? 10,
+      ),
+      cursor:
+        c.req.query("cursor") || undefined,
+    };
+
+    const result =
+      await getPackageReviewsService(
+        packageId,
+        query,
+      );
+
+    logger.info(
+      {
+        packageId,
+        limit: query.limit,
+        cursor: query.cursor,
+      },
+      "Package reviews fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Package reviews fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      logger.warn(
+        {
+          error,
+          packageId:
+            c.req.param("packageId"),
+        },
+        "Failed to fetch package reviews",
+      );
+
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    logger.error(
+      {
+        error,
+        packageId:
+          c.req.param("packageId"),
+      },
+      "Failed to fetch package reviews",
+    );
+
+    return ApiResponse.error(
+      "Failed to fetch package reviews",
       500,
     ).send(c);
   }

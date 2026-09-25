@@ -256,3 +256,19 @@ export const findBookingForReview = async (
     },
   });
 };
+
+
+export const findReviewSummaryByPackageId = (packageId: string) =>
+  getSummary({ packageId });
+
+export const findReviewsByPackageId = (
+  packageId: string,
+  limit: number,
+  cursor?: string,
+) =>{
+     console.log(
+    "REPOSITORY PACKAGE ID:",
+    packageId,
+  );
+  return findReviews({ packageId }, limit, cursor);
+} 

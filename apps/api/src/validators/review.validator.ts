@@ -171,3 +171,12 @@ export const UpdateReviewSchema = z
     },
   )
   .openapi("UpdateReview");
+
+
+  
+
+export const PackageReviewParamSchema = z.object({
+  packageId: z.string().min(1, "Package ID is required").openapi({
+    example: "01a0c996-ea06-7706-b4eb-2834a5889a13",
+  }),
+});

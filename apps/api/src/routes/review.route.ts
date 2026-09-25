@@ -4,8 +4,8 @@ import {
   z,
 } from "@hono/zod-openapi";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { createReviewController, deleteReviewController, updateReviewController } from "../controllers/review.controller.js";
-import { CreateReviewSchema, ReviewIdParamSchema, UpdateReviewSchema } from "../validators/review.validator.js";
+import { createReviewController, deleteReviewController, getPackageReviewsController, updateReviewController } from "../controllers/review.controller.js";
+import { CreateReviewSchema, PackageReviewParamSchema, ReviewIdParamSchema, ReviewPaginationQuerySchema, UpdateReviewSchema } from "../validators/review.validator.js";
 
 
 export const ReviewRoutes = new OpenAPIHono();
@@ -317,4 +317,32 @@ ReviewRoutes.openapi(
   }),
 
   deleteReviewController as any,
+);
+
+ReviewRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/package/{packageId}",
+    tags: ["Review"],
+    summary: "Get reviews for a package",
+    request: {
+      params: PackageReviewParamSchema,
+      query: ReviewPaginationQuerySchema,
+    },
+    responses: {
+      200: {
+        content: { "application/json": { schema: SuccessSchema } },
+        description: "Package reviews fetched successfully",
+      },
+      404: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Package not found",
+      },
+      500: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Failed to fetch package reviews",
+      },
+    },
+  }),
+  getPackageReviewsController as any,
 );

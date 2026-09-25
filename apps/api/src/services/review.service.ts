@@ -1,5 +1,5 @@
-import { createReview, deleteReview, findBookingForReview, findReviewById, updateReview } from "../repositories/review.repository.js";
-import type { CreateReviewInput, CreateReviewResponse, UpdateReviewInput, UpdateReviewResponse } from "../types/review.js";
+import { createReview, deleteReview, findBookingForReview, findReviewById, findReviewsByPackageId, findReviewSummaryByPackageId, updateReview } from "../repositories/review.repository.js";
+import type { CreateReviewInput, CreateReviewResponse, GetReviewsResponse, ReviewListItem, ReviewPaginationQuery, ReviewSummary, UpdateReviewInput, UpdateReviewResponse } from "../types/review.js";
 import { CustomError } from "../utils/custom-error.js";
 
 
@@ -107,4 +107,68 @@ export const deleteReviewService = async (
   }
 
   await deleteReview(reviewId);
+};
+
+type FindReviewsFunction = (
+  limit: number,
+  cursor?: string,
+) => Promise<ReviewListItem[]>;
+
+type FindSummaryFunction =
+  () => Promise<ReviewSummary>;
+
+
+const buildReviewsResponse = async (
+  query: ReviewPaginationQuery,
+  findReviews: FindReviewsFunction,
+  findSummary: FindSummaryFunction,
+): Promise<GetReviewsResponse> => {
+  const reviews = await findReviews(
+    query.limit,
+    query.cursor,
+  );
+
+  const summary = await findSummary();
+
+  const hasNextPage =
+    reviews.length > query.limit;
+
+  const items = hasNextPage
+    ? reviews.slice(0, query.limit)
+    : reviews;
+
+  const nextCursor =
+    hasNextPage && items.length > 0
+      ? items[items.length - 1].id
+      : null;
+
+  return {
+    summary,
+    reviews: items,
+    nextCursor,
+    hasNextPage,
+  };
+};
+
+export const getPackageReviewsService = async (
+  packageId: string,
+  query: ReviewPaginationQuery,
+): Promise<GetReviewsResponse> => {
+    console.log("PACKAGE ID RECEIVED:", packageId);
+  console.log("QUERY RECEIVED:", query);
+  return buildReviewsResponse(
+    query,
+
+    (limit, cursor) =>
+      findReviewsByPackageId(
+        packageId,
+        limit,
+        cursor,
+      ),
+
+    () =>
+      findReviewSummaryByPackageId(
+        packageId,
+      ),
+  );
 };
