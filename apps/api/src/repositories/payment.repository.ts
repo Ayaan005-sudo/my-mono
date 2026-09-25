@@ -345,3 +345,118 @@ export const findPaymentForVerification = async (
     },
   });
 };
+
+export const findBookingForBalancePayment = async (
+  bookingId: string,
+  userId: string,
+) => {
+  return prisma.packageBooking.findFirst({
+    where: {
+      id: bookingId,
+      userId,
+    },
+
+    select: {
+      id: true,
+      status: true,
+
+      totalAmount: true,
+      currency: true,
+      balanceDueDate: true,
+
+      schedule: {
+        select: {
+          id: true,
+          startDate: true,
+          allowPartialPayment: true,
+        },
+      },
+
+      payments: {
+        select: {
+          id: true,
+          amount: true,
+          paymentType: true,
+          status: true,
+          gatewayOrderId: true,
+          paymentGateway: true,
+          createdAt: true,
+          paidAt: true,
+        },
+      },
+    },
+  });
+};
+
+export const createBalancePayment = async (data: {
+  bookingId: string;
+  amount: number;
+  currency: string;
+  gatewayOrderId: string;
+}) => {
+  return prisma.payment.create({
+    data: {
+      id: uuidv7(),
+      bookingId: data.bookingId,
+      amount: data.amount,
+      currency: data.currency,
+      paymentType: "BALANCE",
+      paymentGateway: "RAZORPAY",
+      gatewayOrderId: data.gatewayOrderId,
+      status: "PENDING",
+    },
+  });
+};
+
+export const findPaymentByGatewayOrderId = async (
+  gatewayOrderId: string,
+) => {
+  return prisma.payment.findFirst({
+    where: {
+      gatewayOrderId,
+    },
+
+    select: {
+      id: true,
+      bookingId: true,
+
+      amount: true,
+      currency: true,
+
+      paymentType: true,
+      status: true,
+
+      gatewayOrderId: true,
+      gatewayPaymentId: true,
+
+      booking: {
+        select: {
+          id: true,
+          userId: true,
+          scheduleId: true,
+          adultCount: true,
+          childCount: true,
+          status: true,
+        },
+      },
+    },
+  });
+};
+
+export const markPendingPaymentFailed = async (
+  paymentId: string,
+  gatewayPaymentId: string,
+) => {
+  return prisma.payment.updateMany({
+    where: {
+      id: paymentId,
+      status: "PENDING",
+    },
+
+    data: {
+      status: "FAILED",
+      gatewayPaymentId,
+      failedAt: new Date(),
+    },
+  });
+};

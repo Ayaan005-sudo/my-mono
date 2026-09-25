@@ -197,3 +197,40 @@ export type BookingSummary = {
   };
 };
 
+export type RazorpayWebhookPaymentEntity = {
+  id: string;
+  order_id: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+};
+
+export type RazorpayWebhookPayload = {
+  event: string;
+
+  payload: {
+    payment?: {
+      entity: RazorpayWebhookPaymentEntity;
+    };
+  };
+};
+
+export type CreateBalanceOrderResponse = {
+  paymentId: string;
+  bookingId: string;
+
+  razorpayOrderId: string;
+
+  amount: number;
+  amountInPaise: number;
+
+  currency: string;
+
+  paymentType: "BALANCE";
+
+  totalAmount: number;
+  amountPaid: number;
+  remainingAmount: number;
+
+  balanceDueDate: Date | null;
+};

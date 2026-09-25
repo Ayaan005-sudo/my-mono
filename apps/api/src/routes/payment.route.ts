@@ -9,8 +9,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { CreatePaymentOrderSchema, VerifyPaymentSchema } from "../validators/payment.validator.js";
-import { createPaymentOrderController, verifyPaymentController } from "../controllers/payment.controller.js";
+import { CreateBalanceOrderSchema, CreatePaymentOrderSchema, VerifyPaymentSchema } from "../validators/payment.validator.js";
+import { createBalanceOrderController, createPaymentOrderController, razorpayWebhookController, verifyPaymentController } from "../controllers/payment.controller.js";
 
 
 export const PaymentRoutes = new OpenAPIHono();
@@ -246,4 +246,135 @@ PaymentRoutes.openapi(
   }),
 
   verifyPaymentController as any,
+);
+
+
+PaymentRoutes.openapi(
+  createRoute({
+    method: "post",
+    path: "/create-balance-order",
+
+    tags: ["Payment"],
+
+    summary:
+      "Create Razorpay order for remaining booking balance",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: CreateBalanceOrderSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      201: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Balance payment order created successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Balance payment cannot be created",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Booking not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to create balance payment order",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("USER"),
+    ],
+  }),
+
+  createBalanceOrderController as any,
+);
+
+PaymentRoutes.openapi(
+  createRoute({
+    method: "post",
+    path: "/webhook",
+
+    tags: ["Payment"],
+
+    summary: "Handle Razorpay webhook",
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Webhook processed successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Invalid Razorpay webhook request",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to process Razorpay webhook",
+      },
+    },
+  }),
+
+  razorpayWebhookController as any,
 );

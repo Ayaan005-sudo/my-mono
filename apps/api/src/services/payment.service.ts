@@ -1,5 +1,6 @@
 import { razorpay } from "../lib/razorpay.service.js";
-import { completePaymentAndConfirmBooking, createPendingPayment, findBookingForPayment, findPaymentForVerification, findPendingPayment, markPaymentFailed, updateBookingBalanceDueDate, updatePaymentGatewayOrder } from "../repositories/payment.repository.js";
+import { completePaymentAndConfirmBooking, createBalancePayment, createPendingPayment, findBookingForBalancePayment, findBookingForPayment, findPaymentByGatewayOrderId, findPaymentForVerification, findPendingPayment, markPaymentFailed, markPendingPaymentFailed, updateBookingBalanceDueDate, updatePaymentGatewayOrder } from "../repositories/payment.repository.js";
+import type { CreateBalanceOrderResponse, RazorpayWebhookPayload } from "../types/booking.js";
 import type { CreatePaymentOrderInput, CreatePaymentOrderResponse, VerifyPaymentInput, VerifyPaymentResponse } from "../types/payment.js";
 import { CustomError } from "../utils/custom-error.js";
 import crypto from "node:crypto";
@@ -495,3 +496,339 @@ export const finalizeSuccessfulPayment = async (
   }
 };
 
+
+
+const verifyRazorpayWebhookSignature = (
+  rawBody: string,
+  signature: string,
+) => {
+  const secret =
+    process.env.RAZORPAY_WEBHOOK_SECRET;
+
+  if (!secret) {
+    throw new CustomError(
+      "Razorpay webhook secret is not configured",
+      500,
+    );
+  }
+
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody)
+    .digest("hex");
+
+  const expectedBuffer =
+    Buffer.from(expectedSignature, "utf8");
+  const receivedBuffer =
+    Buffer.from(signature, "utf8");
+
+  if (
+    expectedBuffer.length !==
+    receivedBuffer.length
+  ) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(
+    expectedBuffer,
+    receivedBuffer,
+  );
+};
+
+export const handleRazorpayWebhookService = async (
+  rawBody: string,
+  signature: string | undefined,
+) => {
+  if (!signature) {
+    throw new CustomError(
+      "Razorpay webhook signature is missing",
+      400,
+    );
+  }
+
+  if (
+    !verifyRazorpayWebhookSignature(
+      rawBody,
+      signature,
+    )
+  ) {
+    throw new CustomError(
+      "Invalid Razorpay webhook signature",
+      400,
+    );
+  }
+
+  let webhook: RazorpayWebhookPayload;
+
+  try {
+    webhook = JSON.parse(rawBody) as RazorpayWebhookPayload;
+  } catch {
+    throw new CustomError(
+      "Invalid webhook payload",
+      400,
+    );
+  }
+
+  if (
+    webhook.event !== "payment.captured" &&
+    webhook.event !== "payment.failed"
+  ) {
+    return {
+      processed: false,
+    };
+  }
+
+  const razorpayPayment =
+    webhook.payload.payment?.entity;
+
+  if (
+    !razorpayPayment ||
+    !razorpayPayment.order_id
+  ) {
+    return {
+      processed: false,
+    };
+  }
+
+  const payment =
+    await findPaymentByGatewayOrderId(
+      razorpayPayment.order_id,
+    );
+
+  if (!payment) {
+    return {
+      processed: false,
+    };
+  }
+
+  if (
+    payment.gatewayOrderId !==
+    razorpayPayment.order_id
+  ) {
+    throw new CustomError(
+      "Webhook order mismatch",
+      400,
+    );
+  }
+
+  if (
+    razorpayPayment.amount !==
+    Math.round(payment.amount * 100)
+  ) {
+    throw new CustomError(
+      "Webhook payment amount mismatch",
+      400,
+    );
+  }
+
+  if (
+    razorpayPayment.currency.toUpperCase() !==
+    payment.currency.toUpperCase()
+  ) {
+    throw new CustomError(
+      "Webhook payment currency mismatch",
+      400,
+    );
+  }
+
+  if (webhook.event === "payment.captured") {
+    const participantCount =
+      payment.booking.adultCount +
+      payment.booking.childCount;
+
+    const result =
+      await finalizeSuccessfulPayment(
+        payment.id,
+        payment.booking.id,
+        payment.booking.scheduleId,
+        participantCount,
+        razorpayPayment.id,
+      );
+
+    return {
+      processed: true,
+      alreadyProcessed: result.alreadyProcessed,
+    };
+  }
+
+  if (payment.status === "SUCCESS") {
+    return {
+      processed: true,
+      alreadyProcessed: true,
+    };
+  }
+
+  await markPendingPaymentFailed(
+    payment.id,
+    razorpayPayment.id,
+  );
+
+  return {
+    processed: true,
+  };
+};
+
+export const createBalanceOrderService = async (
+  userId: string,
+  bookingId: string,
+): Promise<CreateBalanceOrderResponse> => {
+  const booking =
+    await findBookingForBalancePayment(
+      bookingId,
+      userId,
+    );
+
+  if (!booking) {
+    throw new CustomError(
+      "Booking not found",
+      404,
+    );
+  }
+
+  if (booking.status !== "CONFIRMED") {
+    throw new CustomError(
+      "Booking is not confirmed",
+      400,
+    );
+  }
+
+  if (!booking.schedule.allowPartialPayment) {
+    throw new CustomError(
+      "Partial payment is not available for this booking",
+      400,
+    );
+  }
+
+  const successfulDeposit =
+    booking.payments.find(
+      (payment) =>
+        payment.paymentType === "DEPOSIT" &&
+        payment.status === "SUCCESS",
+    );
+
+  if (!successfulDeposit) {
+    throw new CustomError(
+      "No successful deposit payment found",
+      400,
+    );
+  }
+
+  const successfulPayments =
+    booking.payments.filter(
+      (payment) => payment.status === "SUCCESS",
+    );
+
+  const amountPaid = successfulPayments.reduce(
+    (total, payment) => total + payment.amount,
+    0,
+  );
+
+  const remainingAmount = Math.max(
+    booking.totalAmount - amountPaid,
+    0,
+  );
+
+  if (remainingAmount <= 0) {
+    throw new CustomError(
+      "Booking is already fully paid",
+      400,
+    );
+  }
+
+  if (
+    booking.balanceDueDate &&
+    new Date() > booking.balanceDueDate
+  ) {
+    throw new CustomError(
+      "Balance payment due date has passed",
+      400,
+    );
+  }
+
+  if (booking.schedule.startDate <= new Date()) {
+    throw new CustomError(
+      "This trek has already started",
+      400,
+    );
+  }
+
+  const pendingBalancePayment =
+    booking.payments.find(
+      (payment) =>
+        payment.paymentType === "BALANCE" &&
+        payment.status === "PENDING",
+    );
+
+  if (pendingBalancePayment) {
+    if (
+      pendingBalancePayment.gatewayOrderId &&
+      pendingBalancePayment.amount === remainingAmount
+    ) {
+      return {
+        paymentId: pendingBalancePayment.id,
+        bookingId: booking.id,
+        razorpayOrderId:
+          pendingBalancePayment.gatewayOrderId,
+        amount: remainingAmount,
+        amountInPaise: Math.round(
+          remainingAmount * 100,
+        ),
+        currency: booking.currency,
+        paymentType: "BALANCE",
+        totalAmount: booking.totalAmount,
+        amountPaid,
+        remainingAmount,
+        balanceDueDate: booking.balanceDueDate,
+      };
+    }
+
+    throw new CustomError(
+      "Balance payment is already pending",
+      400,
+    );
+  }
+
+  const amountInPaise = Math.round(
+    remainingAmount * 100,
+  );
+
+  let razorpayOrder;
+
+  try {
+    razorpayOrder = await razorpay.orders.create({
+      amount: amountInPaise,
+      currency: booking.currency,
+      receipt: `balance_${booking.id}`,
+      notes: {
+        bookingId: booking.id,
+        paymentType: "BALANCE",
+      },
+    });
+  } catch {
+    throw new CustomError(
+      "Failed to create balance payment order",
+      502,
+    );
+  }
+
+  const payment = await createBalancePayment({
+    bookingId: booking.id,
+    amount: remainingAmount,
+    currency: booking.currency,
+    gatewayOrderId: razorpayOrder.id,
+  });
+
+  return {
+    paymentId: payment.id,
+    bookingId: booking.id,
+    razorpayOrderId: razorpayOrder.id,
+    amount: remainingAmount,
+    amountInPaise,
+    currency: booking.currency,
+    paymentType: "BALANCE",
+    totalAmount: booking.totalAmount,
+    amountPaid,
+    remainingAmount,
+    balanceDueDate: booking.balanceDueDate,
+  };
+};
