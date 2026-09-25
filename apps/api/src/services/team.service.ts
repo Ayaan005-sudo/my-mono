@@ -1,7 +1,7 @@
 import { sendVendorOnboardingInvitationEmail } from "../lib/email.service.js";
 import { findVendorProfileByUserId } from "../repositories/onboarding.repository.js";
-import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findUserByEmail, getActiveTeamMembers, getMyPendingTeamInvitations, getTeamDetailsById, rejectTeamInvitation, searchApprovedVendors, updateTeam } from "../repositories/team.repository.js";
-import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamDetailsResponse, TeamInvitationActionResponse, TeamInvitationResponse, TeamMemberResponse, TeamVendorSearchResult, UpdateTeamInput, UpdateTeamResponse, VendorOnboardingInvitationResponse } from "../types/index.js";
+import { acceptTeamInvitation, createOnboardingTeamInvitation, createTeam, createTeamInvitation, findApprovedVendorById, findPendingTeamInvitation, findPendingTeamInvitationByEmail, findTeamById, findTeamInvitationById, findTeamMember, findTeamPublicProfileById, findUserByEmail, getActiveTeamMembers, getMyPendingTeamInvitations, getTeamDetailsById, rejectTeamInvitation, searchApprovedVendors, updateTeam } from "../repositories/team.repository.js";
+import type { CreateTeamInput, CreateTeamResponse, InviteTeamVendorInput, InviteVendorOnboardingInput, MyTeamInvitation, TeamDetailsResponse, TeamInvitationActionResponse, TeamInvitationResponse, TeamMemberResponse, TeamPublicProfileResponse, TeamVendorSearchResult, UpdateTeamInput, UpdateTeamResponse, VendorOnboardingInvitationResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 export const createTeamService = async (
@@ -374,4 +374,23 @@ export const updateTeamService = async (
   }
 
   return updateTeam(teamId, data);
+};
+
+
+export const getTeamPublicProfileService = async (
+  teamId: string,
+): Promise<TeamPublicProfileResponse> => {
+  const team =
+    await findTeamPublicProfileById(
+      teamId,
+    );
+
+  if (!team) {
+    throw new CustomError(
+      "Team not found",
+      404,
+    );
+  }
+
+  return team;
 };

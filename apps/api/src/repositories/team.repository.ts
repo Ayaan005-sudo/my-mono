@@ -1,6 +1,6 @@
 import { prisma } from "../utils/prisma.js";
 import { uuidv7 } from "uuidv7";
-import type { CreateTeamInput, CreateTeamResponse, MyTeamInvitation, TeamDetailsResponse, TeamInvitationActionResponse, TeamMemberResponse, UpdateTeamInput, UpdateTeamResponse } from "../types/index.js";
+import type { CreateTeamInput, CreateTeamResponse, MyTeamInvitation, TeamDetailsResponse, TeamInvitationActionResponse, TeamMemberResponse, TeamPublicProfileResponse, UpdateTeamInput, UpdateTeamResponse } from "../types/index.js";
 import type { TeamInvitation } from "@mono/database";
 
 export const createTeam = async (
@@ -435,3 +435,131 @@ export const updateTeam = async (
     },
   });
 };
+
+export const findTeamPublicProfileById = async (
+  teamId: string,
+): Promise<TeamPublicProfileResponse | null> => {
+  const team = await prisma.team.findFirst({
+    where: {
+      id: teamId,
+    },
+
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      logoUrl: true,
+
+      city: true,
+      state: true,
+      country: true,
+
+      createdAt: true,
+
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+
+      members: {
+        orderBy: {
+          joinedAt: "asc",
+        },
+
+        select: {
+          id: true,
+          role: true,
+
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+
+              city: true,
+              state: true,
+              country: true,
+
+              userExperiences: {
+  where: {
+    verificationStatus: "APPROVED",
+  },
+  select: {
+    id: true,
+    description: true,
+    imageUrls: true,
+    trekName: true,
+    difficulty: true,
+    roleDuringTrek: true,
+    completedAt: true,
+    duration: true,
+    altitude: true,
+    proofUrl: true,
+    verificationStatus: true,
+  },
+},
+
+userCertifications: {
+  where: {
+    verificationStatus: "APPROVED",
+  },
+  select: {
+    id: true,
+    title: true,
+    issuingOrganization: true,
+    certificateNumber: true,
+    certificateUrl: true,
+    issuedAt: true,
+    expiresAt: true,
+    verificationStatus: true,
+  },
+},
+            },
+          },
+        },
+      },
+
+      packages: {
+        where: {
+          status: "PUBLISHED",
+          visibility: "PUBLIC",
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+
+        take: 6,
+
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          galleryImages: true,
+        },
+      },
+    },
+  });
+
+  if (!team) {
+    return null;
+  }
+
+  return {
+    id: team.id,
+    name: team.name,
+    description: team.description,
+    logoUrl: team.logoUrl,
+    city: team.city,
+    state: team.state,
+    country: team.country,
+    owner: team.createdBy,
+    members: team.members,
+    packages: team.packages,
+    createdAt: team.createdAt,
+  };
+};
+

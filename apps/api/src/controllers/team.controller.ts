@@ -4,7 +4,7 @@ import * as TeamService from "../services/team.service.js";
 import ApiResponse from "../utils/api-response.js";
 import { CustomError } from "../utils/custom-error.js";
 import { logger } from "../utils/logger.js";
-import { acceptTeamInvitationService, getMyTeamInvitationsService, getTeamDetailsService, getTeamMembersService, inviteTeamVendorService, inviteVendorOnboardingService, rejectTeamInvitationService, searchTeamVendorsService, updateTeamService } from "../services/team.service.js";
+import { acceptTeamInvitationService, getMyTeamInvitationsService, getTeamDetailsService, getTeamMembersService, getTeamPublicProfileService, inviteTeamVendorService, inviteVendorOnboardingService, rejectTeamInvitationService, searchTeamVendorsService, updateTeamService } from "../services/team.service.js";
 
 export const createTeam = async (
   c: Context,
@@ -406,6 +406,56 @@ export const updateTeamController = async (
 
     return ApiResponse.error(
       "Failed to update team",
+      500,
+    ).send(c);
+  }
+};
+
+export const getTeamPublicProfileController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const teamId =
+      c.req.param("teamId");
+
+    if (!teamId) {
+      return ApiResponse.error(
+        "Team ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await getTeamPublicProfileService(
+        teamId,
+      );
+
+    logger.info(
+      { teamId },
+      "Team public profile fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Team profile fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to fetch team public profile",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to fetch team profile",
       500,
     ).send(c);
   }

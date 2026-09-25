@@ -1,5 +1,5 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { acceptTeamInvitationController, createTeam, getMyTeamInvitationsController, getTeamDetailsController, getTeamMembersController, inviteTeamVendorController, inviteVendorOnboardingController, rejectTeamInvitationController, searchTeamVendorsController, updateTeamController } from "../controllers/team.controller.js";
+import { acceptTeamInvitationController, createTeam, getMyTeamInvitationsController, getTeamDetailsController, getTeamMembersController, getTeamPublicProfileController, inviteTeamVendorController, inviteVendorOnboardingController, rejectTeamInvitationController, searchTeamVendorsController, updateTeamController } from "../controllers/team.controller.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
 import { CreateTeamSchema, InviteTeamVendorSchema, InviteVendorOnboardingSchema, SearchTeamVendorQuerySchema, TeamIdParamSchema, TeamInvitationParamSchema, UpdateTeamSchema } from "../validators/team.validator.js";
 
@@ -854,4 +854,64 @@ teamRoutes.openapi(
   }),
 
   updateTeamController as any,
+);
+
+teamRoutes.openapi(
+  createRoute({
+    method: "get",
+
+    path: "/{teamId}/public-profile",
+
+    tags: ["Team"],
+
+    summary: "Get team public profile",
+
+    request: {
+      params: TeamIdParamSchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Team profile fetched successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Team ID is required",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Team not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch team profile",
+      },
+    },
+  }),
+
+  getTeamPublicProfileController as any,
 );
