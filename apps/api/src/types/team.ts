@@ -139,7 +139,7 @@ export type TeamDetailsResponse = {
   };
   _count: {
     members: number;
-    
+    packages: number;
   };
 };
 

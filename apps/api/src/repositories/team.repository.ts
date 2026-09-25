@@ -403,7 +403,7 @@ export const getTeamDetailsById = async (
               status: "ACTIVE",
             },
           },
-          
+          packages: true,
         },
       },
     },
