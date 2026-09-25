@@ -522,6 +522,28 @@ userCertifications: {
         },
       },
 
+      experiences: {
+  orderBy: {
+    completedAt: "desc",
+  },
+
+  select: {
+    id: true,
+
+    packageId: true,
+    scheduleId: true,
+
+    trekName: true,
+    difficulty: true,
+
+    completedAt: true,
+    duration: true,
+    altitude: true,
+
+    imageUrls: true,
+  },
+},
+
       packages: {
         where: {
           status: "PUBLISHED",
@@ -558,6 +580,7 @@ userCertifications: {
     country: team.country,
     owner: team.createdBy,
     members: team.members,
+    experiences: team.experiences,
     packages: team.packages,
     createdAt: team.createdAt,
   };

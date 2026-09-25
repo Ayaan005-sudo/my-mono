@@ -191,6 +191,21 @@ export type TeamPublicProfileResponse = {
     };
   }[];
 
+  experiences: {
+  id: string;
+
+  packageId: string;
+  scheduleId: string;
+
+  trekName: string;
+  difficulty: string | null;
+
+  completedAt: Date;
+  duration: number | null;
+  altitude: number | null;
+
+  imageUrls: string[];
+}[];
 
   packages: {
     id: string;
