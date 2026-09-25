@@ -2,12 +2,14 @@ import type { Difficulty } from "@mono/database";
 import {
   createPackage,
   findMasterTrekById,
+  findMasterTrekItinerary,
+  findMasterTrekRoutes,
   findPackageById,
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
   updatePackageBasics,
 } from "../repositories/package.repository.js";
-import type { CreatePackageInput, CreatePackageResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse } from "../types/package.js";
+import type { CreatePackageInput, CreatePackageResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -170,3 +172,71 @@ export const updatePackageBasicsService = async (
   return updatePackageBasics(packageId, data);
 };
 
+export const getPackageItineraryService = async (
+  userId: string,
+  packageId: string,
+  routeId: string,
+): Promise<GetPackageItineraryResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to access this package",
+      403,
+    );
+  }
+
+  const route = await findMasterTrekItinerary(
+    existingPackage.masterTrekId,
+    routeId,
+  );
+
+  if (!route) {
+    throw new CustomError(
+      "Trek route not found for this package",
+      404,
+    );
+  }
+
+  return {
+    routeId: route.id,
+    routeName: route.name,
+    days: route.itineraryDays,
+  };
+};
+
+export const getPackageRoutesService = async (
+  userId: string,
+  packageId: string,
+): Promise<GetPackageRoutesResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to access this package",
+      403,
+    );
+  }
+
+  const routes = await findMasterTrekRoutes(
+    existingPackage.masterTrekId,
+  );
+
+  return routes;
+};

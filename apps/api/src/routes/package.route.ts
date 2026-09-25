@@ -4,8 +4,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { createPackage, updatePackageBasics } from "../controllers/package.controller.js";
-import { CreatePackageSchema, UpdatePackageBasicsSchema } from "../validators/package.validator.js";
+import { createPackage, getPackageItinerary, getPackageRoutes, updatePackageBasics } from "../controllers/package.controller.js";
+import { CreatePackageSchema, GetPackageRoutesParamsSchema, UpdatePackageBasicsSchema } from "../validators/package.validator.js";
 
 
 export const PackageRoutes = new OpenAPIHono();
@@ -211,4 +211,191 @@ PackageRoutes.openapi(
   }),
 
   updatePackageBasics as any,
+);
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "get",
+
+    path: "/{id}/routes",
+
+    tags: ["Package"],
+
+    summary:
+      "Get available trek routes for package",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: GetPackageRoutesParamsSchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package routes fetched successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid package ID",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only access own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Package not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch package routes",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  getPackageRoutes as any,
+);
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/{id}/itinerary/{routeId}",
+
+    tags: ["Package"],
+
+    summary: "Get selected trek route itinerary for package prefill",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z.string().openapi({
+          example:
+            "01a0b469-20fb-795b-98ca-89e931968a12",
+        }),
+
+        routeId: z.string().openapi({
+          example:
+            "01a0b464-0c2e-76f7-943b-15c39886dd68",
+        }),
+      }),
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package itinerary fetched successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid request",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only access own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package or trek route not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch package itinerary",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  getPackageItinerary as any,
 );

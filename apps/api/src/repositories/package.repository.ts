@@ -153,3 +153,75 @@ export const updatePackageBasics = async (
     },
   });
 };
+
+export const findMasterTrekItinerary = async (
+  masterTrekId: string,
+  routeId: string,
+) => {
+  return prisma.trekRoute.findFirst({
+    where: {
+      id: routeId,
+      masterTrekId,
+    },
+
+    select: {
+      id: true,
+      name: true,
+
+      itineraryDays: {
+        orderBy: {
+          dayNumber: "asc",
+        },
+
+        select: {
+          dayNumber: true,
+          title: true,
+          description: true,
+          startLocation: true,
+          endLocation: true,
+          distanceKm: true,
+          duration: true,
+          altitude: true,
+          imageUrls: true,
+
+          activities: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              iconUrl: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const findMasterTrekRoutes = async (
+  masterTrekId: string,
+) => {
+  return prisma.trekRoute.findMany({
+    where: {
+      masterTrekId,
+    },
+
+    select: {
+      id: true,
+      name: true,
+      description: true,
+
+      distanceKm: true,
+      difficulty: true,
+      elevationGain: true,
+
+      ascentTime: true,
+      descentTime: true,
+
+      startPoint: true,
+      endPoint: true,
+
+      isPopular: true,
+    },
+  });
+};

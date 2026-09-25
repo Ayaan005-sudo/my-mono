@@ -78,3 +78,80 @@ export const UpdatePackageBasicsSchema = z.object({
     }),
 });
 
+
+export const GetPackageItineraryParamsSchema = z.object({
+  id: z
+    .string()
+    .min(1, "Package ID is required")
+    .openapi({
+      example: "019c1234-5678-7abc-9def-123456789abc",
+    }),
+});
+
+export const PackageItineraryDaySchema = z.object({
+  dayNumber: z
+    .number()
+    .int()
+    .positive()
+    .openapi({ example: 1 }),
+
+  title: z
+    .string()
+    .min(1, "Day title is required")
+    .openapi({ example: "Sankri to Juda Ka Talab" }),
+
+  description: z
+    .string()
+    .optional()
+    .openapi({
+      example: "Trek through dense pine forest to Juda Ka Talab.",
+    }),
+
+  startLocation: z
+    .string()
+    .optional()
+    .openapi({ example: "Sankri" }),
+
+  endLocation: z
+    .string()
+    .optional()
+    .openapi({ example: "Juda Ka Talab" }),
+
+  distanceKm: z
+    .number()
+    .positive()
+    .optional()
+    .openapi({ example: 4 }),
+
+  duration: z
+    .string()
+    .optional()
+    .openapi({ example: "4 hours" }),
+
+  altitude: z
+    .number()
+    .positive()
+    .optional()
+    .openapi({ example: 2780 }),
+
+  imageUrls: z
+    .array(z.string().url())
+    .default([])
+    .openapi({
+      example: [
+        "https://res.cloudinary.com/demo/image/upload/day-1-1.jpg",
+      ],
+    }),
+
+  
+});
+
+
+export const GetPackageRoutesParamsSchema = z.object({
+  id: z
+    .string()
+    .min(1, "Package ID is required")
+    .openapi({
+      example: "01a0b469-20fb-795b-98ca-89e931968a12",
+    }),
+});

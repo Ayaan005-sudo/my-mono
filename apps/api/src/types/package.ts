@@ -54,3 +54,49 @@ export type UpdatePackageBasicsResponse = {
   updatedAt: Date;
 };
 
+
+export type GetPackageItineraryResponse = {
+  routeId: string;
+  routeName: string;
+
+  days: {
+    dayNumber: number;
+    title: string;
+    description: string | null;
+
+    startLocation: string | null;
+    endLocation: string | null;
+
+    distanceKm: number | null;
+    duration: string | null;
+    altitude: number | null;
+
+    imageUrls: string[];
+
+    activities: {
+      id: string;
+      name: string;
+      description: string | null;
+      iconUrl: string | null;
+    }[];
+  }[];
+};
+
+
+export type GetPackageRoutesResponse = {
+  id: string;
+  name: string;
+  description: string | null;
+
+  distanceKm: number | null;
+  difficulty: Difficulty | null;
+  elevationGain: number | null;
+
+  ascentTime: string | null;
+  descentTime: string | null;
+
+  startPoint: string | null;
+  endPoint: string | null;
+
+  isPopular: boolean;
+}[];
