@@ -1,5 +1,5 @@
 import type { Difficulty, PackageStatus } from "@mono/database";
-import type { CreatePackageItinerarySchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageItineraryDaySchema } from "../validators/package.validator.js";
+import type { CreatePackageItinerarySchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema } from "../validators/package.validator.js";
 import z from "zod";
 
 export type CreatePackageInput = {
@@ -181,5 +181,20 @@ export type AddPackageItineraryDayResponse = {
 
 
   createdAt: Date;
+  updatedAt: Date;
+};
+
+export type UpdatePackageInclusionsInput =
+  z.infer<typeof UpdatePackageInclusionsSchema>;
+
+export type UpdatePackageInclusionsResponse = {
+  id: string;
+
+  inclusions: string[];
+  exclusions: string[];
+  packingList: string[];
+
+  fitnessAndExperienceRequirement: string | null;
+
   updatedAt: Date;
 };

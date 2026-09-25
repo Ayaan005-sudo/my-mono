@@ -15,9 +15,10 @@ import {
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
   updatePackageBasics,
+  updatePackageInclusions,
   updatePackageItineraryDay,
 } from "../repositories/package.repository.js";
-import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse } from "../types/package.js";
+import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -440,3 +441,32 @@ export const addPackageItineraryDayService = async (
 };
 
 
+
+export const updatePackageInclusionsService = async (
+  userId: string,
+  packageId: string,
+  input: UpdatePackageInclusionsInput,
+): Promise<UpdatePackageInclusionsResponse> => {
+
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to update this package",
+      403,
+    );
+  }
+
+  return updatePackageInclusions(
+    packageId,
+    input,
+  );
+};

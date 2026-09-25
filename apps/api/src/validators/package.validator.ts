@@ -251,3 +251,46 @@ export const DeletePackageItineraryDayParamsSchema = z.object({
 
 export const AddPackageItineraryDaySchema =
   PackageItineraryDaySchema;
+
+
+   export const UpdatePackageInclusionsSchema = z.object({
+  inclusions: z
+    .array(z.string().min(1))
+    .optional()
+    .openapi({
+      example: [
+        "Accommodation (Tents/Homestays)",
+        "All Meals during the trek",
+        "Qualified Trek Leader",
+      ],
+    }),
+
+  exclusions: z
+    .array(z.string().min(1))
+    .optional()
+    .openapi({
+      example: [
+        "Cab fare to Jobra and from Chattru to Manali is not included",
+      ],
+    }),
+
+  packingList: z
+    .array(z.string().min(1))
+    .optional()
+    .openapi({
+      example: [
+        "Trekking shoes",
+        "Warm jacket",
+        "Water bottle",
+      ],
+    }),
+
+  fitnessAndExperienceRequirement: z
+  .string()
+  .optional()
+  .openapi({
+    example:
+      "Participants must be able to jog 5 km in 30 minutes. Previous high-altitude experience is recommended but not mandatory.",
+  }),
+});
+

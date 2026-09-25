@@ -1,8 +1,8 @@
 import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
-import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, UpdatePackageBasicsInput, UpdatePackageItineraryDayInput } from "../types/index.js";
-import { addPackageItineraryDayService, createPackageItineraryService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, updatePackageBasicsService, updatePackageItineraryDayService } from "../services/package.service.js";
+import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput } from "../types/index.js";
+import { addPackageItineraryDayService, createPackageItineraryService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
 
 export const createPackage = async (
@@ -446,6 +446,60 @@ export const addPackageItineraryDayController = async (
 
     return ApiResponse.error(
       "Failed to add package itinerary day",
+      500,
+    ).send(c);
+  }
+};
+
+export const updatePackageInclusionsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    const body =
+      await c.req.json<UpdatePackageInclusionsInput>();
+
+    const result =
+      await updatePackageInclusionsService(
+        userId,
+        packageId,
+        body,
+      );
+
+    logger.info(
+      { userId, packageId },
+      "Package inclusions and requirements updated successfully",
+    );
+
+    return ApiResponse.success(
+      "Package inclusions and requirements updated successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to update package inclusions and requirements",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to update package inclusions and requirements",
       500,
     ).send(c);
   }

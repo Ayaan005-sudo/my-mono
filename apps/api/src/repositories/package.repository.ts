@@ -1,6 +1,6 @@
 import type { MasterTrek } from "@mono/database";
 import { uuidv7 } from "uuidv7";
-import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, UpdatePackageBasicsInput, UpdatePackageItineraryDayInput } from "../types/package.js";
+import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput } from "../types/package.js";
 import { prisma } from "../utils/prisma.js";
 
 export const createPackage = async (
@@ -492,3 +492,47 @@ export const findRouteForMasterTrek = async (
     },
   });
 };
+
+
+export const updatePackageInclusions = async (
+  packageId: string,
+  data: UpdatePackageInclusionsInput,
+) => {
+  return prisma.package.update({
+    where: {
+      id: packageId,
+    },
+
+    data: {
+      ...(data.inclusions !== undefined && {
+        inclusions: data.inclusions,
+      }),
+
+      ...(data.exclusions !== undefined && {
+        exclusions: data.exclusions,
+      }),
+
+      ...(data.packingList !== undefined && {
+        packingList: data.packingList,
+      }),
+
+     ...(data.fitnessAndExperienceRequirement !== undefined && {
+  fitnessAndExperienceRequirement:
+    data.fitnessAndExperienceRequirement,
+}),
+    },
+
+    select: {
+      id: true,
+
+      inclusions: true,
+      exclusions: true,
+      packingList: true,
+
+      fitnessAndExperienceRequirement: true,
+
+      updatedAt: true,
+    },
+  });
+};
+

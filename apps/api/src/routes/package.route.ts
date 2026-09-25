@@ -4,8 +4,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { addPackageItineraryDayController, createPackage, createPackageItineraryController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, updatePackageBasics, updatePackageItineraryDayController } from "../controllers/package.controller.js";
-import { CreatePackageItinerarySchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetPackageRoutesParamsSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageItineraryDaySchema } from "../validators/package.validator.js";
+import { addPackageItineraryDayController, createPackage, createPackageItineraryController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController } from "../controllers/package.controller.js";
+import { CreatePackageItinerarySchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetPackageRoutesParamsSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema } from "../validators/package.validator.js";
 
 
 export const PackageRoutes = new OpenAPIHono();
@@ -821,3 +821,110 @@ PackageRoutes.openapi(
 
   addPackageItineraryDayController as any,
 );
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{id}/inclusions",
+
+    tags: ["Package"],
+
+    summary:
+      "Update package inclusions and requirements",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z
+          .string()
+          .min(1, "Package ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a12",
+          }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema:
+              UpdatePackageInclusionsSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package inclusions and requirements updated successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid request data",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only update own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Package not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to update package inclusions and requirements",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  updatePackageInclusionsController as any,
+);
+
