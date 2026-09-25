@@ -3,7 +3,7 @@ import ApiResponse from "../utils/api-response.js";
 import { Context } from "hono";
 import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
-import { createReviewService, deleteReviewService, getPackageReviewsService, getVendorReviewsService, updateReviewService } from "../services/review.service.js";
+import { createReviewService, deleteReviewService, getPackageReviewsService, getTeamReviewsService, getVendorReviewsService, updateReviewService } from "../services/review.service.js";
 import type { CreateReviewInput, ReviewPaginationQuery, UpdateReviewInput } from "../types/index.js";
 
  
@@ -375,6 +375,87 @@ export const getVendorReviewsController = async (
 
     return ApiResponse.error(
       "Failed to fetch vendor reviews",
+      500,
+    ).send(c);
+  }
+};
+
+
+export const getTeamReviewsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const teamId =
+      c.req.param("teamId");
+
+    if (!teamId) {
+      logger.warn(
+        "Get team reviews failed: team ID is required",
+      );
+
+      return ApiResponse.error(
+        "Team ID is required",
+        400,
+      ).send(c);
+    }
+
+    const query: ReviewPaginationQuery = {
+      limit: Number(
+        c.req.query("limit") ?? 10,
+      ),
+      cursor:
+        c.req.query("cursor") || undefined,
+    };
+
+    const result =
+      await getTeamReviewsService(
+        teamId,
+        query,
+      );
+
+    logger.info(
+      {
+        teamId,
+        limit: query.limit,
+        cursor: query.cursor,
+      },
+      "Team reviews fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Team reviews fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      logger.warn(
+        {
+          error,
+          teamId:
+            c.req.param("teamId"),
+        },
+        "Failed to fetch team reviews",
+      );
+
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    logger.error(
+      {
+        error,
+        teamId:
+          c.req.param("teamId"),
+      },
+      "Failed to fetch team reviews",
+    );
+
+    return ApiResponse.error(
+      "Failed to fetch team reviews",
       500,
     ).send(c);
   }

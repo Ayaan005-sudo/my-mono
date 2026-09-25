@@ -4,8 +4,8 @@ import {
   z,
 } from "@hono/zod-openapi";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
-import { createReviewController, deleteReviewController, getPackageReviewsController, getVendorReviewsController, updateReviewController } from "../controllers/review.controller.js";
-import { CreateReviewSchema, PackageReviewParamSchema, ReviewIdParamSchema, ReviewPaginationQuerySchema, UpdateReviewSchema, VendorReviewParamSchema } from "../validators/review.validator.js";
+import { createReviewController, deleteReviewController, getPackageReviewsController, getTeamReviewsController, getVendorReviewsController, updateReviewController } from "../controllers/review.controller.js";
+import { CreateReviewSchema, PackageReviewParamSchema, ReviewIdParamSchema, ReviewPaginationQuerySchema, TeamReviewParamSchema, UpdateReviewSchema, VendorReviewParamSchema } from "../validators/review.validator.js";
 
 
 export const ReviewRoutes = new OpenAPIHono();
@@ -374,4 +374,33 @@ ReviewRoutes.openapi(
     },
   }),
   getVendorReviewsController as any,
+);
+
+
+ReviewRoutes.openapi(
+  createRoute({
+    method: "get",
+    path: "/team/{teamId}",
+    tags: ["Review"],
+    summary: "Get reviews for a team",
+    request: {
+      params: TeamReviewParamSchema,
+      query: ReviewPaginationQuerySchema,
+    },
+    responses: {
+      200: {
+        content: { "application/json": { schema: SuccessSchema } },
+        description: "Team reviews fetched successfully",
+      },
+      404: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Team not found",
+      },
+      500: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Failed to fetch team reviews",
+      },
+    },
+  }),
+  getTeamReviewsController as any,
 );

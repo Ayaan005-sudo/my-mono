@@ -282,3 +282,13 @@ export const findReviewsByVendorId = (
 
 export const findReviewSummaryByVendorId = (vendorId: string) =>
   getSummary({ package: { createdByUserId: vendorId } });
+
+
+export const findReviewsByTeamId = (
+  teamId: string,
+  limit: number,
+  cursor?: string,
+) => findReviews({ package: { teamId } }, limit, cursor);
+
+export const findReviewSummaryByTeamId = (teamId: string) =>
+  getSummary({ package: { teamId } });

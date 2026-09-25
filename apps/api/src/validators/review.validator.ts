@@ -186,3 +186,10 @@ export const VendorReviewParamSchema = z.object({
     example: "01a0c996-ea06-7706-b4eb-2834a5889a13",
   }),
 });
+
+
+export const TeamReviewParamSchema = z.object({
+  teamId: z.string().min(1, "Team ID is required").openapi({
+    example: "01a0c996-ea06-7706-b4eb-2834a5889a13",
+  }),
+});
