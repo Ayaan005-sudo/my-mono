@@ -111,6 +111,11 @@ export type MasterTrekUserListItemResponse =
   Prisma.MasterTrekGetPayload<{
     include: {
       location: true;
+      packages: {
+        include: {
+          schedules: true;
+        };
+      };
     };
   }> & {
     startingPrice: number | null;
@@ -149,6 +154,11 @@ export type MasterTrekUserResponse =
               location: true;
             };
           };
+        };
+      };
+      packages: {
+        include: {
+          schedules: true;
         };
       };
     };

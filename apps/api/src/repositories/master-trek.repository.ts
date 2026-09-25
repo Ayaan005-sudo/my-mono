@@ -31,7 +31,6 @@ export const createActivity = async (
       name,
       description,
       iconUrl,
-      packageItineraryDayIds: [],
       trekIds: [],
       itineraryDayIds: [],
     },
@@ -358,6 +357,8 @@ export const getAllMasterTreksUser = async (
   limit: number,
   cursor?: string,
 ) => {
+  const now = new Date();
+
   return prisma.masterTrek.findMany({
     take: limit + 1,
 
@@ -382,10 +383,12 @@ export const getAllMasterTreksUser = async (
               availableSeats: {
                 gt: 0,
               },
+              startDate: {
+                gte: now,
+              },
             },
-            select: {
-              price: true,
-              currency: true,
+            orderBy: {
+              startDate: "asc",
             },
           },
         },
@@ -401,6 +404,8 @@ export const getAllMasterTreksUser = async (
 export const getMasterTrekByIdUser = async (
   trekId: string,
 ) => {
+  const now = new Date();
+
   return prisma.masterTrek.findUnique({
     where: {
       id: trekId,
@@ -448,10 +453,12 @@ export const getMasterTrekByIdUser = async (
               availableSeats: {
                 gt: 0,
               },
+              startDate: {
+                gte: now,
+              },
             },
-            select: {
-              price: true,
-              currency: true,
+            orderBy: {
+              startDate: "asc",
             },
           },
         },
@@ -462,4 +469,4 @@ export const getMasterTrekByIdUser = async (
 
 
 
-
+
