@@ -95,41 +95,96 @@ export const getVendorApplicationByUserId = async (
   });
 };
 
-export const approveVendorApplication = async (
+export const approveVendorApplicationRepo = async (
   userId: string,
 ): Promise<VendorReviewResponse> => {
   return prisma.$transaction(async (tx) => {
-    const vendorProfile = await tx.vendorProfile.update({
+    const user = await tx.user.findUnique({
       where: {
-        userId,
-      },
-      data: {
-        verificationStatus: "APPROVED",
-        verifiedAt: new Date(),
-        rejectionReason: null,
+        id: userId,
       },
       select: {
-        id: true,
-        userId: true,
-        verificationStatus: true,
-        verifiedAt: true,
-        rejectionReason: true,
+        email: true,
       },
     });
+
+    const approvedAt = new Date();
+
+    const vendorProfile =
+      await tx.vendorProfile.update({
+        where: {
+          userId,
+        },
+
+        data: {
+          verificationStatus: "APPROVED",
+          verifiedAt: approvedAt,
+          rejectionReason: null,
+        },
+
+        select: {
+          id: true,
+          userId: true,
+          verificationStatus: true,
+          verifiedAt: true,
+          rejectionReason: true,
+        },
+      });
 
     await tx.user.update({
       where: {
         id: userId,
       },
+
       data: {
         role: "VENDOR",
       },
     });
 
+    // Approve all pending experiences submitted
+    // as part of this vendor application.
+    await tx.userExperience.updateMany({
+      where: {
+        userId,
+        verificationStatus: "PENDING",
+      },
+
+      data: {
+        verificationStatus: "APPROVED",
+      },
+    });
+
+    // Approve all pending certifications submitted
+    // as part of this vendor application.
+    await tx.userCertification.updateMany({
+      where: {
+        userId,
+        verificationStatus: "PENDING",
+      },
+
+      data: {
+        verificationStatus: "APPROVED",
+        verifiedAt: approvedAt,
+      },
+    });
+
+    if (user?.email) {
+      await tx.teamInvitation.updateMany({
+        where: {
+          email: user.email,
+          status: "PENDING",
+          invitedUserId: null,
+        },
+
+        data: {
+          invitedUserId: userId,
+        },
+      });
+    }
+
     return vendorProfile;
   });
 };
-
 export const rejectVendorApplication = async (
   userId: string,
   data: RejectVendorApplicationInput,
