@@ -12,6 +12,7 @@ import { PackageRoutes } from "./routes/package.route.js";
 import { BookingRoutes } from "./routes/booking.route.js";
 import { PaymentRoutes } from "./routes/payment.route.js";
 import { ReviewRoutes } from "./routes/review.route.js";
+import { VendorRoutes } from "./routes/vendor.route.js";
 
 const app = new OpenAPIHono();
 
@@ -56,6 +57,7 @@ app.route("/api/package",PackageRoutes);
 app.route("/api/booking",BookingRoutes);
 app.route("/api/payment",PaymentRoutes);
 app.route("/api/review",ReviewRoutes);
+app.route("/api/vendor",VendorRoutes);
 
 // Basic route
 app.get("/", (c) => {
