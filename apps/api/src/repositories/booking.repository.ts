@@ -214,3 +214,51 @@ export const updateBookingContactInfo = async (
     },
   });
 };
+
+
+export const findBookingForPaymentOptions = async (
+  bookingId: string,
+) => {
+  return prisma.packageBooking.findUnique({
+    where: {
+      id: bookingId,
+    },
+
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+
+      totalAmount: true,
+      currency: true,
+
+      // Contact info bhi lao because payment se pehle
+      // booking form complete hona chahiye.
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      address: true,
+      city: true,
+      state: true,
+      country: true,
+      pinCode: true,
+
+      schedule: {
+        select: {
+          id: true,
+          startDate: true,
+          bookingStartDate: true,
+          bookingEndDate: true,
+          status: true,
+          availableSeats: true,
+
+          allowPartialPayment: true,
+          depositType: true,
+          depositValue: true,
+          balanceDueDaysBeforeStart: true,
+        },
+      },
+    },
+  });
+};

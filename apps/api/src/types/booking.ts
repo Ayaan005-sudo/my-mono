@@ -106,3 +106,23 @@ export type UpdateBookingContactInfoInput =
 };
 
 
+export type GetBookingPaymentOptionsResponse = {
+  bookingId: string;
+
+  totalAmount: number;
+  currency: string;
+
+  paymentOptions: {
+    full: {
+      available: true;
+      amount: number;
+    };
+
+    deposit: {
+      available: boolean;
+      amount: number | null;
+      remainingAmount: number | null;
+      balanceDueDate: Date | null;
+    };
+  };
+};

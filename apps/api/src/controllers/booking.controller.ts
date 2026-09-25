@@ -2,7 +2,7 @@ import type { Context } from "hono";
 import ApiResponse from "../utils/api-response.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { CreateBookingInput, UpdateBookingContactInfoInput } from "../types/booking.js";
-import { createBookingService, getBookingDetailService, updateBookingContactInfoService } from "../services/booking.service.js";
+import { createBookingService, getBookingDetailService, getBookingPaymentOptionsService, updateBookingContactInfoService } from "../services/booking.service.js";
 import { logger } from "../utils/logger.js";
 
 
@@ -214,6 +214,80 @@ export const updateBookingContactInfoController = async (
 
     return ApiResponse.error(
       "Failed to update booking contact information",
+      500,
+    ).send(c);
+  }
+};
+
+export const getBookingPaymentOptionsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+
+    const bookingId =
+      c.req.param("bookingId");
+
+    if (!bookingId) {
+      logger.warn(
+        { userId },
+        "Get booking payment options failed: booking ID is required",
+      );
+
+      return ApiResponse.error(
+        "Booking ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await getBookingPaymentOptionsService(
+        userId,
+        bookingId,
+      );
+
+    logger.info(
+      {
+        userId,
+        bookingId,
+      },
+      "Booking payment options fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Payment options fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      logger.warn(
+        {
+          error,
+          userId: c.get("userId"),
+          bookingId: c.req.param("bookingId"),
+        },
+        "Failed to fetch booking payment options",
+      );
+
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    logger.error(
+      {
+        error,
+        userId: c.get("userId"),
+        bookingId: c.req.param("bookingId"),
+      },
+      "Failed to fetch booking payment options",
+    );
+
+    return ApiResponse.error(
+      "Failed to fetch payment options",
       500,
     ).send(c);
   }

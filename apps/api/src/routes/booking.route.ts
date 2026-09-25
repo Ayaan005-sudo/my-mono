@@ -8,7 +8,7 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { createBookingController, getBookingDetailController, updateBookingContactInfoController } from "../controllers/booking.controller.js";
+import { createBookingController, getBookingDetailController, getBookingPaymentOptionsController, updateBookingContactInfoController } from "../controllers/booking.controller.js";
 import { BookingIdParamSchema, CreateBookingSchema, UpdateBookingContactInfoSchema } from "../validators/booking.validator.js";
 
 
@@ -285,3 +285,91 @@ BookingRoutes.openapi(
   updateBookingContactInfoController as any,
 );
 
+BookingRoutes.openapi(
+  createRoute({
+    method: "get",
+
+    path: "/{bookingId}/payment-options",
+
+    tags: ["Booking"],
+
+    summary: "Get booking payment options",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: BookingIdParamSchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Payment options fetched successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Booking is not eligible for payment",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - User access required",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Booking not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch booking payment options",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("USER"),
+    ],
+  }),
+
+  getBookingPaymentOptionsController as any,
+);
