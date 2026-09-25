@@ -127,6 +127,12 @@ enum DepositType {
   FIXED
 }
 
+enum PaymentType {
+  FULL
+  DEPOSIT
+  BALANCE
+}
+
 model User {
   id        String  @id @map("_id")
   googleId  String  @unique
@@ -640,6 +646,29 @@ model PackageBooking {
   userId     String
   scheduleId String
 
+  adultCount Int @default(1)
+  childCount Int @default(0)
+
+  // Booking contact snapshot
+  firstName String?
+  lastName  String?
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  country   String?
+  pinCode   String?
+  message   String?
+
+  subtotal       Float
+  discountAmount Float @default(0)
+  bookingFee     Float @default(0)
+  totalAmount    Float
+
+  currency       String    @default("INR")
+  balanceDueDate DateTime?
+
   status BookingStatus @default(PENDING)
 
   bookedAt           DateTime  @default(now())
@@ -654,15 +683,17 @@ model PackageBooking {
 
   payments Payment[]
 
-  @@unique([userId, scheduleId])
+  @@index([userId])
+  @@index([scheduleId])
 }
 
 model Payment {
   id        String @id @map("_id")
   bookingId String
 
-  amount   Float
-  currency String @default("INR")
+  amount      Float
+  currency    String      @default("INR")
+  paymentType PaymentType
 
   paymentGateway   String?
   gatewayOrderId   String?
