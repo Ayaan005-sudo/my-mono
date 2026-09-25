@@ -39,7 +39,7 @@ export const createPackage = async (
       "Failed to create package",
     );
 
-    console.error("ACTUAL PRISMA PACKAGE ERROR:", error);
+  
 
     if (error instanceof CustomError) {
       return ApiResponse.error(
@@ -206,10 +206,7 @@ export const getPackageRoutes = async (
       { error },
       "Failed to fetch package routes",
     );
- console.error(
-    "ACTUAL GET PACKAGE ROUTES ERROR:",
-    error,
-  );
+ 
     if (error instanceof CustomError) {
       return ApiResponse.error(
         error.message,
