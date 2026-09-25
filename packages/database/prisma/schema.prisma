@@ -133,6 +133,11 @@ enum PaymentType {
   BALANCE
 }
 
+enum ExperienceSource {
+  SELF_SUBMITTED
+  PLATFORM
+}
+
 model User {
   id        String  @id @map("_id")
   googleId  String  @unique
@@ -228,6 +233,10 @@ model UserExperience {
 
   verificationStatus VerificationStatus @default(PENDING)
 
+  source     ExperienceSource @default(SELF_SUBMITTED)
+  packageId  String?
+  scheduleId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -321,6 +330,27 @@ model Team {
   members     TeamMember[]
   invitations TeamInvitation[]
   packages    Package[]
+  experiences TeamExperience[]
+}
+
+model TeamExperience {
+  id String @id @map("_id")
+
+  teamId     String
+  packageId  String
+  scheduleId String @unique
+
+  trekName    String
+  difficulty  Difficulty?
+  completedAt DateTime
+  duration    Int?
+  altitude    Float?
+  imageUrls   String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id])
 }
 
 model TeamMember {
