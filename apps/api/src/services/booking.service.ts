@@ -1,5 +1,5 @@
-import { createBooking, findScheduleForBooking } from "../repositories/booking.repository.js";
-import type { CreateBookingInput, CreateBookingResponse } from "../types/booking.js";
+import { createBooking, findBookingDetailById, findScheduleForBooking } from "../repositories/booking.repository.js";
+import type { CreateBookingInput, CreateBookingResponse, GetBookingDetailResponse } from "../types/booking.js";
 import { CustomError } from "../utils/custom-error.js";
 
 
@@ -120,4 +120,147 @@ export const createBookingService = async (
     currency: schedule.currency,
     balanceDueDate,
   });
+};
+
+
+export const getBookingDetailService = async (
+  userId: string,
+  bookingId: string,
+): Promise<GetBookingDetailResponse> => {
+  const booking =
+    await findBookingDetailById(bookingId);
+
+  if (!booking) {
+    throw new CustomError(
+      "Booking not found",
+      404,
+    );
+  }
+
+  if (booking.userId !== userId) {
+    throw new CustomError(
+      "You are not authorized to view this booking",
+      403,
+    );
+  }
+
+  const userName =
+    booking.user.name?.trim() ?? "";
+
+  const nameParts = userName
+    ? userName.split(/\s+/)
+    : [];
+
+  const fallbackFirstName =
+    nameParts.length > 0
+      ? nameParts[0]
+      : null;
+
+  const fallbackLastName =
+    nameParts.length > 1
+      ? nameParts.slice(1).join(" ")
+      : null;
+
+  return {
+    id: booking.id,
+    status: booking.status,
+
+    personalInfo: {
+      // Booking snapshot always wins once saved.
+      firstName:
+        booking.firstName ??
+        fallbackFirstName,
+
+      lastName:
+        booking.lastName ??
+        fallbackLastName,
+
+      email:
+        booking.email ??
+        booking.user.email ??
+        null,
+
+      phone:
+        booking.phone ??
+        booking.user.phone ??
+        null,
+
+      address:
+        booking.address ?? null,
+
+      city:
+        booking.city ??
+        booking.user.city ??
+        null,
+
+      state:
+        booking.state ??
+        booking.user.state ??
+        null,
+
+      country:
+        booking.country ??
+        booking.user.country ??
+        null,
+
+      pinCode:
+        booking.pinCode ?? null,
+
+      message:
+        booking.message ?? null,
+    },
+
+    orderSummary: {
+      packageId:
+        booking.schedule.package.id,
+
+      packageTitle:
+        booking.schedule.package.title ??
+        booking.schedule.package.masterTrek.name,
+
+      trekLeader: {
+        id:
+          booking.schedule.package.createdBy.id,
+
+        name:
+          booking.schedule.package.createdBy.name,
+
+        avatarUrl:
+          booking.schedule.package.createdBy.avatarUrl,
+      },
+
+      scheduleId:
+        booking.schedule.id,
+
+      startDate:
+        booking.schedule.startDate,
+
+      endDate:
+        booking.schedule.endDate,
+
+      adultCount:
+        booking.adultCount,
+
+      childCount:
+        booking.childCount,
+
+      subtotal:
+        booking.subtotal,
+
+      discountAmount:
+        booking.discountAmount,
+
+      bookingFee:
+        booking.bookingFee,
+
+      totalAmount:
+        booking.totalAmount,
+
+      currency:
+        booking.currency,
+
+      cancellationPolicy:
+        booking.schedule.cancellationPolicy,
+    },
+  };
 };

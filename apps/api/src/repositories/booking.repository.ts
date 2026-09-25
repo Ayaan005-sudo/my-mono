@@ -88,3 +88,82 @@ export const createBooking = async (
     },
   });
 };
+
+
+export const findBookingDetailById = async (
+  bookingId: string,
+) => {
+  return prisma.packageBooking.findUnique({
+    where: {
+      id: bookingId,
+    },
+
+    select: {
+      id: true,
+      userId: true,
+      status: true,
+
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      address: true,
+      city: true,
+      state: true,
+      country: true,
+      pinCode: true,
+      message: true,
+
+      adultCount: true,
+      childCount: true,
+
+      subtotal: true,
+      discountAmount: true,
+      bookingFee: true,
+      totalAmount: true,
+      currency: true,
+
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          city: true,
+          state: true,
+          country: true,
+        },
+      },
+
+      schedule: {
+        select: {
+          id: true,
+          startDate: true,
+          endDate: true,
+          cancellationPolicy: true,
+
+          package: {
+            select: {
+              id: true,
+              title: true,
+
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                },
+              },
+
+              masterTrek: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+};

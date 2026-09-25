@@ -35,3 +35,46 @@ export type CreateBookingRepoInput = {
   balanceDueDate: Date | null;
 };
 
+export type GetBookingDetailResponse = {
+  id: string;
+  status: string;
+
+  personalInfo: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    country: string | null;
+    pinCode: string | null;
+    message: string | null;
+  };
+
+  orderSummary: {
+    packageId: string;
+    packageTitle: string | null;
+
+    trekLeader: {
+      id: string;
+      name: string | null;
+      avatarUrl: string | null;
+    };
+
+    scheduleId: string;
+    startDate: Date;
+    endDate: Date;
+
+    adultCount: number;
+    childCount: number;
+
+    subtotal: number;
+    discountAmount: number;
+    bookingFee: number;
+    totalAmount: number;
+    currency: string;
+
+    cancellationPolicy: string | null;
+  };
+};

@@ -8,8 +8,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { createBookingController } from "../controllers/booking.controller.js";
-import { CreateBookingSchema } from "../validators/booking.validator.js";
+import { createBookingController, getBookingDetailController } from "../controllers/booking.controller.js";
+import { BookingIdParamSchema, CreateBookingSchema } from "../validators/booking.validator.js";
 
 
 
@@ -116,4 +116,77 @@ BookingRoutes.openapi(
   }),
 
   createBookingController as any,
+);
+
+BookingRoutes.openapi(
+  createRoute({
+    method: "get",
+
+    path: "/{bookingId}",
+
+    tags: ["Booking"],
+
+    summary:
+      "Get booking details for booking info page",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: BookingIdParamSchema,
+    },
+
+    responses: {
+      200: {
+        description:
+          "Booking details fetched successfully",
+
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+      },
+
+      403: {
+        description: "Forbidden",
+
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+      },
+
+      404: {
+        description: "Booking not found",
+
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+      },
+
+      500: {
+        description: "Internal server error",
+
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("USER"),
+    ],
+  }),
+
+  getBookingDetailController as any,
 );
