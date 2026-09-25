@@ -9,8 +9,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { CreatePaymentOrderSchema } from "../validators/payment.validator.js";
-import { createPaymentOrderController } from "../controllers/payment.controller.js";
+import { CreatePaymentOrderSchema, VerifyPaymentSchema } from "../validators/payment.validator.js";
+import { createPaymentOrderController, verifyPaymentController } from "../controllers/payment.controller.js";
 
 
 export const PaymentRoutes = new OpenAPIHono();
@@ -141,4 +141,109 @@ PaymentRoutes.openapi(
   }),
 
   createPaymentOrderController as any,
+);
+
+
+PaymentRoutes.openapi(
+  createRoute({
+    method: "post",
+    path: "/verify",
+
+    tags: ["Payment"],
+
+    summary: "Verify Razorpay payment",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      body: {
+        content: {
+          "application/json": {
+            schema: VerifyPaymentSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Payment verified successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Invalid payment verification request",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Payment does not belong to user",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Payment not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Payment already verified or insufficient seats",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to verify payment",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("USER"),
+    ],
+  }),
+
+  verifyPaymentController as any,
 );

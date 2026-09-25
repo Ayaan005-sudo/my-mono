@@ -135,3 +135,213 @@ export const markPaymentFailed = async (
     },
   });
 };
+
+
+export const completePaymentAndConfirmBooking = async (
+  paymentId: string,
+  bookingId: string,
+  scheduleId: string,
+  participantCount: number,
+  razorpayPaymentId: string,
+) => {
+  return prisma.$transaction(async (tx) => {
+    const paidAt = new Date();
+
+    const paymentClaim =
+      await tx.payment.updateMany({
+        where: {
+          id: paymentId,
+          status: "PENDING",
+        },
+
+        data: {
+          status: "SUCCESS",
+          gatewayPaymentId: razorpayPaymentId,
+          paidAt,
+        },
+      });
+
+    if (paymentClaim.count === 0) {
+      const existingPayment =
+        await tx.payment.findUnique({
+          where: {
+            id: paymentId,
+          },
+
+          select: {
+            id: true,
+            bookingId: true,
+            amount: true,
+            currency: true,
+            paymentType: true,
+            status: true,
+            gatewayOrderId: true,
+            gatewayPaymentId: true,
+            paidAt: true,
+          },
+        });
+
+      if (!existingPayment) {
+        throw new Error("PAYMENT_NOT_FOUND");
+      }
+
+      if (existingPayment.status === "SUCCESS") {
+        const existingBooking =
+          await tx.packageBooking.findUnique({
+            where: {
+              id: existingPayment.bookingId,
+            },
+
+            select: {
+              id: true,
+              status: true,
+            },
+          });
+
+        return {
+          payment: existingPayment,
+          booking: existingBooking,
+          alreadyProcessed: true,
+        };
+      }
+
+      throw new Error("PAYMENT_NOT_PENDING");
+    }
+
+    const payment =
+      await tx.payment.findUnique({
+        where: {
+          id: paymentId,
+        },
+
+        select: {
+          id: true,
+          bookingId: true,
+          amount: true,
+          currency: true,
+          paymentType: true,
+          status: true,
+          gatewayOrderId: true,
+          gatewayPaymentId: true,
+          paidAt: true,
+        },
+      });
+
+    if (!payment) {
+      throw new Error("PAYMENT_NOT_FOUND");
+    }
+
+    let booking;
+
+    if (payment.paymentType === "BALANCE") {
+      const existingBooking =
+        await tx.packageBooking.findUnique({
+          where: {
+            id: bookingId,
+          },
+
+          select: {
+            id: true,
+            status: true,
+          },
+        });
+
+      if (
+        !existingBooking ||
+        existingBooking.status !== "CONFIRMED"
+      ) {
+        throw new Error("BOOKING_NOT_CONFIRMED");
+      }
+
+      booking = existingBooking;
+    } else {
+      const seatUpdate =
+    await tx.packageSchedule.updateMany({
+      where: {
+        id: scheduleId,
+
+        availableSeats: {
+          gte: participantCount,
+        },
+      },
+
+      data: {
+        availableSeats: {
+          decrement: participantCount,
+        },
+      },
+    });
+
+  if (seatUpdate.count !== 1) {
+    throw new Error("INSUFFICIENT_SEATS");
+  }
+
+  booking =
+    await tx.packageBooking.update({
+      where: {
+        id: bookingId,
+      },
+
+      data: {
+        status: "CONFIRMED",
+      },
+
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+}
+
+    return {
+      payment,
+      booking,
+      alreadyProcessed: false,
+    };
+  });
+};
+
+export const findPaymentForVerification = async (
+  paymentId: string,
+) => {
+  return prisma.payment.findUnique({
+    where: {
+      id: paymentId,
+    },
+
+    select: {
+      id: true,
+      bookingId: true,
+
+      amount: true,
+      currency: true,
+      paymentType: true,
+
+      paymentGateway: true,
+      gatewayOrderId: true,
+      gatewayPaymentId: true,
+
+      status: true,
+
+      booking: {
+        select: {
+          id: true,
+          userId: true,
+          status: true,
+
+          adultCount: true,
+          childCount: true,
+
+          scheduleId: true,
+
+          schedule: {
+            select: {
+              id: true,
+              availableSeats: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};

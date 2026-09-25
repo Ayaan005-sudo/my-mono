@@ -1,7 +1,8 @@
 import { razorpay } from "../lib/razorpay.service.js";
-import { createPendingPayment, findBookingForPayment, findPendingPayment, markPaymentFailed, updateBookingBalanceDueDate, updatePaymentGatewayOrder } from "../repositories/payment.repository.js";
-import type { CreatePaymentOrderInput, CreatePaymentOrderResponse } from "../types/payment.js";
+import { completePaymentAndConfirmBooking, createPendingPayment, findBookingForPayment, findPaymentForVerification, findPendingPayment, markPaymentFailed, updateBookingBalanceDueDate, updatePaymentGatewayOrder } from "../repositories/payment.repository.js";
+import type { CreatePaymentOrderInput, CreatePaymentOrderResponse, VerifyPaymentInput, VerifyPaymentResponse } from "../types/payment.js";
 import { CustomError } from "../utils/custom-error.js";
+import crypto from "node:crypto";
 
 export const createPaymentOrderService = async (
   userId: string,
@@ -266,3 +267,231 @@ console.log("FETCHED ORDER:", fetchedOrder);
     );
   }
 };
+
+
+export const verifyPaymentService = async (
+  userId: string,
+  input: VerifyPaymentInput,
+): Promise<VerifyPaymentResponse> => {
+  const payment =
+    await findPaymentForVerification(
+      input.paymentId,
+    );
+
+  if (!payment) {
+    throw new CustomError(
+      "Payment not found",
+      404,
+    );
+  }
+
+  if (payment.booking.userId !== userId) {
+    throw new CustomError(
+      "You are not authorized to verify this payment",
+      403,
+    );
+  }
+
+  if (
+    payment.status !== "PENDING" &&
+    payment.status !== "SUCCESS"
+  ) {
+    throw new CustomError(
+      "This payment cannot be verified",
+      400,
+    );
+  }
+
+  if (!payment.gatewayOrderId) {
+    throw new CustomError(
+      "Razorpay order not found for this payment",
+      400,
+    );
+  }
+
+
+  if (
+    input.razorpayOrderId !==
+    payment.gatewayOrderId
+  ) {
+    throw new CustomError(
+      "Razorpay order ID does not match",
+      400,
+    );
+  }
+
+  const secret =
+    process.env.RAZORPAY_KEY_SECRET;
+
+  if (!secret) {
+    throw new CustomError(
+      "Razorpay is not configured",
+      500,
+    );
+  }
+
+  /*
+   * Razorpay signature:
+   *
+   * HMAC_SHA256(
+   *   order_id + "|" + payment_id,
+   *   key_secret
+   * )
+   */
+
+  const body =
+    `${payment.gatewayOrderId}|${input.razorpayPaymentId}`;
+
+  const expectedSignature =
+    crypto
+      .createHmac(
+        "sha256",
+        secret,
+      )
+      .update(body)
+      .digest("hex");
+
+  /*
+   * timingSafeEqual avoid direct string
+   * comparison for signature verification.
+   */
+  const expectedBuffer =
+    Buffer.from(expectedSignature);
+
+  const receivedBuffer =
+    Buffer.from(input.razorpaySignature);
+
+  const isValid =
+    expectedBuffer.length ===
+      receivedBuffer.length &&
+    crypto.timingSafeEqual(
+      expectedBuffer,
+      receivedBuffer,
+    );
+
+  if (!isValid) {
+    throw new CustomError(
+      "Invalid payment signature",
+      400,
+    );
+  }
+
+  if (
+    payment.status === "SUCCESS" &&
+    payment.gatewayPaymentId &&
+    payment.gatewayPaymentId !==
+      input.razorpayPaymentId
+  ) {
+    throw new CustomError(
+      "Razorpay payment ID does not match",
+      400,
+    );
+  }
+
+  const participantCount =
+    payment.booking.adultCount +
+    payment.booking.childCount;
+
+  if (participantCount <= 0) {
+    throw new CustomError(
+      "Invalid participant count",
+      400,
+    );
+  }
+
+  const result =
+    await finalizeSuccessfulPayment(
+      payment.id,
+      payment.booking.id,
+      payment.booking.scheduleId,
+      participantCount,
+      input.razorpayPaymentId,
+    );
+
+  return {
+    paymentId: result.payment.id,
+
+    bookingId: result.booking?.id ?? payment.booking.id,
+
+    paymentType:
+      result.payment.paymentType,
+
+    amount:
+      result.payment.amount,
+
+    currency:
+      result.payment.currency,
+
+    paymentStatus: "SUCCESS",
+
+    bookingStatus: "CONFIRMED",
+
+    razorpayPaymentId:
+      result.payment.gatewayPaymentId ??
+      input.razorpayPaymentId,
+
+    paidAt:
+      result.payment.paidAt!,
+  };
+};
+
+export const finalizeSuccessfulPayment = async (
+  paymentId: string,
+  bookingId: string,
+  scheduleId: string,
+  participantCount: number,
+  razorpayPaymentId: string,
+) => {
+  try {
+    return await completePaymentAndConfirmBooking(
+      paymentId,
+      bookingId,
+      scheduleId,
+      participantCount,
+      razorpayPaymentId,
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "INSUFFICIENT_SEATS"
+    ) {
+      throw new CustomError(
+        "Not enough seats are available for this booking",
+        409,
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      error.message === "PAYMENT_NOT_FOUND"
+    ) {
+      throw new CustomError(
+        "Payment not found",
+        404,
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      error.message === "PAYMENT_NOT_PENDING"
+    ) {
+      throw new CustomError(
+        "Payment cannot be processed in its current state",
+        409,
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      error.message === "BOOKING_NOT_CONFIRMED"
+    ) {
+      throw new CustomError(
+        "Booking is not confirmed",
+        400,
+      );
+    }
+
+    throw error;
+  }
+};
+
