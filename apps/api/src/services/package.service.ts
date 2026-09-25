@@ -20,6 +20,7 @@ import {
   findPackageSchedules,
   findPackageSchedulesByIds,
   findRouteForMasterTrek,
+  findVendorPackages,
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
   openPackageSchedule,
@@ -30,7 +31,7 @@ import {
   updatePackageSchedule,
   updatePackageScheduleType,
 } from "../repositories/package.repository.js";
-import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeactivatePackageResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, OpenPackageScheduleResponse, PackageScheduleDisplayStatus, PublishPackageResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
+import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeactivatePackageResponse, DeletePackageItineraryDayResponse, GetMyActivitiesQuery, GetMyActivitiesResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, OpenPackageScheduleResponse, PackageScheduleDisplayStatus, PublishPackageResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -1178,3 +1179,57 @@ export const deactivatePackageService = async (
 
   return deactivatePackage(packageId);
 };
+
+
+export const getMyActivitiesService = async (
+  userId: string,
+  query: GetMyActivitiesQuery,
+): Promise<GetMyActivitiesResponse> => {
+  const { packages, total } =
+    await findVendorPackages(userId, query);
+
+  const now = new Date();
+
+  const items = packages.map((pkg) => {
+    const nextSchedule =
+      pkg.schedules.find(
+        (schedule) =>
+          schedule.startDate > now,
+      ) ?? null;
+
+    return {
+      id: pkg.id,
+      title: pkg.title,
+      status: pkg.status,
+      durationDays: pkg.durationDays,
+
+      nextSchedule: nextSchedule
+        ? {
+            id: nextSchedule.id,
+            price: nextSchedule.price,
+            adultPrice: nextSchedule.adultPrice,
+            childPrice: nextSchedule.childPrice,
+            currency: nextSchedule.currency,
+            startDate: nextSchedule.startDate,
+            endDate: nextSchedule.endDate,
+            availableSeats:
+              nextSchedule.availableSeats,
+          }
+        : null,
+    };
+  });
+
+  return {
+    items,
+
+    pagination: {
+      page: query.page,
+      limit: query.limit,
+      total,
+      totalPages: Math.ceil(
+        total / query.limit,
+      ),
+    },
+  };
+};
+

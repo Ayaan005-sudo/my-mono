@@ -1,5 +1,5 @@
 import type { DepositType, Difficulty, PackageStatus, ScheduleStatus, ScheduleType } from "@mono/database";
-import type { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
+import type { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, GetMyActivitiesQuerySchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 import z from "zod";
 
 export type CreatePackageInput = {
@@ -366,4 +366,37 @@ export type DeactivatePackageResponse = {
   title: string | null;
   status: PackageStatus;
   updatedAt: Date;
+};
+
+
+export type GetMyActivitiesQuery =
+  z.infer<typeof GetMyActivitiesQuerySchema>;
+
+export type MyActivityItem = {
+  id: string;
+  title: string | null;
+  status: PackageStatus;
+  durationDays: number | null;
+
+  nextSchedule: {
+    id: string;
+    price: number | null;
+    adultPrice: number | null;
+    childPrice: number | null;
+    currency: string;
+    startDate: Date;
+    endDate: Date;
+    availableSeats: number;
+  } | null;
+};
+
+export type GetMyActivitiesResponse = {
+  items: MyActivityItem[];
+
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 };

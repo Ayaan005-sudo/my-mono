@@ -455,3 +455,47 @@ export const BulkCancelPackageSchedulesSchema = z.object({
 });
 
 
+export const GetMyActivitiesQuerySchema = z.object({
+  search: z
+    .string()
+    .optional()
+    .openapi({
+      example: "Hampta",
+    }),
+
+  status: z
+    .enum(["DRAFT", "PUBLISHED", "INACTIVE", "CANCELLED"])
+    .optional()
+    .openapi({
+      example: "PUBLISHED",
+    }),
+
+  sortBy: z
+    .enum(["newest", "oldest"])
+    .optional()
+    .default("newest")
+    .openapi({
+      example: "newest",
+    }),
+
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .default(1)
+    .openapi({
+      example: 1,
+    }),
+
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .optional()
+    .default(10)
+    .openapi({
+      example: 10,
+    }),
+});

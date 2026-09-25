@@ -1,6 +1,6 @@
 import type { MasterTrek, ScheduleType } from "@mono/database";
 import { uuidv7 } from "uuidv7";
-import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput } from "../types/package.js";
+import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, GetMyActivitiesQuery, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput } from "../types/package.js";
 import { prisma } from "../utils/prisma.js";
 
 export const createPackage = async (
@@ -845,4 +845,81 @@ export const deactivatePackage = async (
       updatedAt: true,
     },
   });
+};
+
+
+export const findVendorPackages = async (
+  userId: string,
+  query: GetMyActivitiesQuery,
+) => {
+  const skip = (query.page - 1) * query.limit;
+
+  const where = {
+    createdByUserId: userId,
+
+    ...(query.status && {
+      status: query.status,
+    }),
+
+    ...(query.search && {
+      title: {
+        contains: query.search,
+        mode: "insensitive" as const,
+      },
+    }),
+  };
+
+  const [packages, total] = await Promise.all([
+    prisma.package.findMany({
+      where,
+
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        durationDays: true,
+        createdAt: true,
+
+        schedules: {
+          where: {
+            status: "OPEN",
+          },
+
+          orderBy: {
+            startDate: "asc",
+          },
+
+          select: {
+            id: true,
+            price: true,
+            adultPrice: true,
+            childPrice: true,
+            currency: true,
+            startDate: true,
+            endDate: true,
+            availableSeats: true,
+          },
+        },
+      },
+
+      orderBy: {
+        createdAt:
+          query.sortBy === "oldest"
+            ? "asc"
+            : "desc",
+      },
+
+      skip,
+      take: query.limit,
+    }),
+
+    prisma.package.count({
+      where,
+    }),
+  ]);
+
+  return {
+    packages,
+    total,
+  };
 };

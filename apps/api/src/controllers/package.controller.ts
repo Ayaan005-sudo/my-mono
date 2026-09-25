@@ -2,8 +2,9 @@ import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
 import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
-import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, openPackageScheduleService, publishPackageService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
+import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, openPackageScheduleService, publishPackageService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
+import { GetMyActivitiesQuerySchema } from "../validators/package.validator.js";
 
 export const createPackage = async (
   c: Context,
@@ -998,6 +999,53 @@ export const deactivatePackageController = async (
 
     return ApiResponse.error(
       "Failed to deactivate package",
+      500,
+    ).send(c);
+  }
+};
+
+export const getMyActivitiesController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+
+    const query =
+      GetMyActivitiesQuerySchema.parse(
+        c.req.query(),
+      );
+
+    const result =
+      await getMyActivitiesService(
+        userId,
+        query,
+      );
+
+    logger.info(
+      { userId },
+      "My activities fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "My activities fetched successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to fetch my activities",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to fetch my activities",
       500,
     ).send(c);
   }
