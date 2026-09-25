@@ -1071,6 +1071,12 @@ export const searchPublicPackages = async (
           },
         },
 
+        reviews: {
+          select: {
+            rating: true,
+          },
+        },
+
         schedules: {
           where: scheduleWhere,
 
@@ -1106,7 +1112,7 @@ export const searchPublicPackages = async (
 
   return {
     packages,
-    total,
+    total
   };
 };
 
