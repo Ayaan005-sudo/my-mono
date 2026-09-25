@@ -1,5 +1,5 @@
 import type { Difficulty, PackageStatus } from "@mono/database";
-import type { UpdatePackageBasicsSchema } from "../validators/package.validator.js";
+import type { CreatePackageItinerarySchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageItineraryDaySchema } from "../validators/package.validator.js";
 import z from "zod";
 
 export type CreatePackageInput = {
@@ -100,3 +100,86 @@ export type GetPackageRoutesResponse = {
 
   isPopular: boolean;
 }[];
+
+
+export type CreatePackageItineraryInput =
+  z.infer<typeof CreatePackageItinerarySchema>;
+
+  export type CreatePackageItineraryResponse = {
+  packageId: string;
+  routeId: string;
+
+  days: {
+    id: string;
+    dayNumber: number;
+    title: string;
+    description: string | null;
+
+    startLocation: string | null;
+    endLocation: string | null;
+
+    distanceKm: number | null;
+    duration: string | null;
+    altitude: number | null;
+
+    imageUrls: string[];
+
+  
+  }[];
+};
+
+
+export type UpdatePackageItineraryDayInput =
+  z.infer<typeof UpdatePackageItineraryDaySchema>;
+
+export type UpdatePackageItineraryDayResponse = {
+  id: string;
+  packageId: string;
+
+  dayNumber: number;
+  title: string;
+  description: string | null;
+
+  startLocation: string | null;
+  endLocation: string | null;
+
+  distanceKm: number | null;
+  duration: string | null;
+  altitude: number | null;
+
+  imageUrls: string[];
+
+ 
+  updatedAt: Date;
+};
+
+export type DeletePackageItineraryDayResponse = {
+  id: string;
+  dayNumber: number;
+};
+
+
+export type AddPackageItineraryDayInput =
+  z.infer<typeof PackageItineraryDaySchema>;
+
+export type AddPackageItineraryDayResponse = {
+  id: string;
+  packageId: string;
+
+  dayNumber: number;
+  title: string;
+  description: string | null;
+
+  startLocation: string | null;
+  endLocation: string | null;
+
+  distanceKm: number | null;
+  duration: string | null;
+  altitude: number | null;
+
+  imageUrls: string[];
+
+
+  createdAt: Date;
+  updatedAt: Date;
+};

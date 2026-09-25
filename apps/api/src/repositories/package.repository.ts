@@ -1,6 +1,6 @@
 import type { MasterTrek } from "@mono/database";
 import { uuidv7 } from "uuidv7";
-import type { CreatePackageInput, UpdatePackageBasicsInput } from "../types/package.js";
+import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, UpdatePackageBasicsInput, UpdatePackageItineraryDayInput } from "../types/package.js";
 import { prisma } from "../utils/prisma.js";
 
 export const createPackage = async (
@@ -222,6 +222,273 @@ export const findMasterTrekRoutes = async (
       endPoint: true,
 
       isPopular: true,
+    },
+  });
+};
+
+export const createPackageItinerary = async (
+  packageId: string,
+  routeId: string,
+  days: CreatePackageItineraryInput["days"],
+) => {
+  return prisma.$transaction(async (tx) => {
+
+    await tx.package.update({
+  where: {
+    id: packageId,
+  },
+
+  data: {
+    route: {
+      connect: {
+        id: routeId,
+      },
+    },
+  },
+});
+
+    for (const day of days) {
+       console.log("3. BEFORE DAY CREATE", day.dayNumber);
+      await tx.packageItineraryDay.create({
+        data: {
+          id: uuidv7(),
+          packageId,
+
+          dayNumber: day.dayNumber,
+          title: day.title,
+          description: day.description,
+
+          startLocation: day.startLocation,
+          endLocation: day.endLocation,
+
+          distanceKm: day.distanceKm,
+          duration: day.duration,
+          altitude: day.altitude,
+
+          imageUrls: day.imageUrls,
+        },
+
+      });
+    }
+
+    return tx.package.findUnique({
+      where: {
+        id: packageId,
+      },
+      select: {
+        id: true,
+        routeId: true,
+
+        itineraryDays: {
+          orderBy: {
+            dayNumber: "asc",
+          },
+          select: {
+            id: true,
+            dayNumber: true,
+            title: true,
+            description: true,
+            startLocation: true,
+            endLocation: true,
+            distanceKm: true,
+            duration: true,
+            altitude: true,
+            imageUrls: true,
+
+
+          },
+        },
+      },
+    });
+  });
+};
+
+
+
+export const findPackageItineraryDay = async (
+  packageId: string,
+  dayId: string,
+) => {
+  return prisma.packageItineraryDay.findFirst({
+    where: {
+      id: dayId,
+      packageId,
+    },
+  });
+};
+
+export const updatePackageItineraryDay = async (
+  dayId: string,
+  data: UpdatePackageItineraryDayInput,
+) => {
+  return prisma.packageItineraryDay.update({
+    where: {
+      id: dayId,
+    },
+
+    data: {
+      ...(data.dayNumber !== undefined && {
+        dayNumber: data.dayNumber,
+      }),
+
+      ...(data.title !== undefined && {
+        title: data.title,
+      }),
+
+      ...(data.description !== undefined && {
+        description: data.description,
+      }),
+
+      ...(data.startLocation !== undefined && {
+        startLocation: data.startLocation,
+      }),
+
+      ...(data.endLocation !== undefined && {
+        endLocation: data.endLocation,
+      }),
+
+      ...(data.distanceKm !== undefined && {
+        distanceKm: data.distanceKm,
+      }),
+
+      ...(data.duration !== undefined && {
+        duration: data.duration,
+      }),
+
+      ...(data.altitude !== undefined && {
+        altitude: data.altitude,
+      }),
+
+      ...(data.imageUrls !== undefined && {
+        imageUrls: data.imageUrls,
+      }),
+    },
+
+    select: {
+      id: true,
+      packageId: true,
+
+      dayNumber: true,
+      title: true,
+      description: true,
+
+      startLocation: true,
+      endLocation: true,
+
+      distanceKm: true,
+      duration: true,
+      altitude: true,
+
+      imageUrls: true,
+
+      
+
+      updatedAt: true,
+    },
+  });
+};
+
+export const deletePackageItineraryDay = async (
+  dayId: string,
+) => {
+  return prisma.packageItineraryDay.delete({
+    where: {
+      id: dayId,
+    },
+
+    select: {
+      id: true,
+      dayNumber: true,
+    },
+  });
+};
+
+
+export const findPackageItineraryDayByNumber = async (
+  packageId: string,
+  dayNumber: number,
+) => {
+  return prisma.packageItineraryDay.findFirst({
+    where: {
+      packageId,
+      dayNumber,
+    },
+    select: {
+      id: true,
+      dayNumber: true,
+    },
+  });
+};
+
+export const addPackageItineraryDay = async (
+  packageId: string,
+  input: AddPackageItineraryDayInput,
+) => {
+  return prisma.packageItineraryDay.create({
+    data: {
+      id: uuidv7(),
+
+      packageId,
+
+      dayNumber: input.dayNumber,
+      title: input.title,
+      description: input.description,
+
+      startLocation: input.startLocation,
+      endLocation: input.endLocation,
+
+      distanceKm: input.distanceKm,
+      duration: input.duration,
+      altitude: input.altitude,
+
+      imageUrls: input.imageUrls,
+    },
+
+    select: {
+      id: true,
+      packageId: true,
+
+      dayNumber: true,
+      title: true,
+      description: true,
+
+      startLocation: true,
+      endLocation: true,
+
+      distanceKm: true,
+      duration: true,
+      altitude: true,
+
+      imageUrls: true,
+
+
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+};
+
+export const countPackageItineraryDays = async (
+  packageId: string,
+) => {
+  return prisma.packageItineraryDay.count({
+    where: {
+      packageId,
+    },
+  });
+};
+
+export const findRouteForMasterTrek = async (
+  routeId: string,
+  masterTrekId: string,
+) => {
+  return prisma.trekRoute.findFirst({
+    where: {
+      id: routeId,
+      masterTrekId,
+    },
+    select: {
+      id: true,
     },
   });
 };

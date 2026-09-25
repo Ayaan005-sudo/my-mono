@@ -1,15 +1,23 @@
 import type { Difficulty } from "@mono/database";
 import {
+  addPackageItineraryDay,
+  countPackageItineraryDays,
   createPackage,
+  createPackageItinerary,
+  deletePackageItineraryDay,
   findMasterTrekById,
   findMasterTrekItinerary,
   findMasterTrekRoutes,
   findPackageById,
+  findPackageItineraryDay,
+  findPackageItineraryDayByNumber,
+  findRouteForMasterTrek,
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
   updatePackageBasics,
+  updatePackageItineraryDay,
 } from "../repositories/package.repository.js";
-import type { CreatePackageInput, CreatePackageResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse } from "../types/package.js";
+import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -240,3 +248,195 @@ export const getPackageRoutesService = async (
 
   return routes;
 };
+
+export const createPackageItineraryService = async (
+  userId: string,
+  packageId: string,
+  input: CreatePackageItineraryInput,
+): Promise<CreatePackageItineraryResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to update this package",
+      403,
+    );
+  }
+
+  const route = await findRouteForMasterTrek(
+    input.routeId,
+    existingPackage.masterTrekId,
+  );
+
+  if (!route) {
+    throw new CustomError(
+      "Invalid route for this package",
+      400,
+    );
+  }
+
+  
+
+  const existingDays =
+    await countPackageItineraryDays(packageId);
+
+  if (existingDays > 0) {
+    throw new CustomError(
+      "Package itinerary already exists",
+      409,
+    );
+  }
+
+  const result =
+    await createPackageItinerary(
+      packageId,
+      input.routeId,
+      input.days,
+    );
+
+  if (!result) {
+    throw new CustomError(
+      "Failed to create package itinerary",
+      500,
+    );
+  }
+
+  return {
+    packageId: result.id,
+    routeId: result.routeId!,
+    days: result.itineraryDays,
+  };
+};
+
+export const updatePackageItineraryDayService = async (
+  userId: string,
+  packageId: string,
+  dayId: string,
+  input: UpdatePackageItineraryDayInput,
+): Promise<UpdatePackageItineraryDayResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to update this package",
+      403,
+    );
+  }
+
+  const existingDay =
+    await findPackageItineraryDay(
+      packageId,
+      dayId,
+    );
+
+  if (!existingDay) {
+    throw new CustomError(
+      "Package itinerary day not found",
+      404,
+    );
+  }
+
+  return updatePackageItineraryDay(
+    dayId,
+    input,
+  );
+};
+
+export const deletePackageItineraryDayService = async (
+  userId: string,
+  packageId: string,
+  dayId: string,
+): Promise<DeletePackageItineraryDayResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to update this package",
+      403,
+    );
+  }
+
+  const existingDay =
+    await findPackageItineraryDay(
+      packageId,
+      dayId,
+    );
+
+  if (!existingDay) {
+    throw new CustomError(
+      "Package itinerary day not found",
+      404,
+    );
+  }
+
+  return deletePackageItineraryDay(dayId);
+};
+
+export const addPackageItineraryDayService = async (
+  userId: string,
+  packageId: string,
+  input: AddPackageItineraryDayInput,
+): Promise<AddPackageItineraryDayResponse> => {
+
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to update this package",
+      403,
+    );
+  }
+
+  const existingDay =
+    await findPackageItineraryDayByNumber(
+      packageId,
+      input.dayNumber,
+    );
+
+  if (existingDay) {
+    throw new CustomError(
+      `Day ${input.dayNumber} already exists`,
+      409,
+    );
+  }
+
+
+  return addPackageItineraryDay(
+    packageId,
+    input,
+  );
+};
+
+

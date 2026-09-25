@@ -4,8 +4,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { createPackage, getPackageItinerary, getPackageRoutes, updatePackageBasics } from "../controllers/package.controller.js";
-import { CreatePackageSchema, GetPackageRoutesParamsSchema, UpdatePackageBasicsSchema } from "../validators/package.validator.js";
+import { addPackageItineraryDayController, createPackage, createPackageItineraryController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, updatePackageBasics, updatePackageItineraryDayController } from "../controllers/package.controller.js";
+import { CreatePackageItinerarySchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetPackageRoutesParamsSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageItineraryDaySchema } from "../validators/package.validator.js";
 
 
 export const PackageRoutes = new OpenAPIHono();
@@ -398,4 +398,426 @@ PackageRoutes.openapi(
   }),
 
   getPackageItinerary as any,
+);
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "post",
+    path: "/{id}/itinerary",
+
+    tags: ["Package"],
+
+    summary: "Create package itinerary",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z.string().openapi({
+          example:
+            "01a0b469-20fb-795b-98ca-89e931968a12",
+        }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema: CreatePackageItinerarySchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      201: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package itinerary created successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid itinerary data",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Forbidden - Vendor only",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Package not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package itinerary already exists",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to create package itinerary",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  createPackageItineraryController as any,
+);
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{id}/itinerary/{dayId}",
+
+    tags: ["Package"],
+
+    summary: "Update package itinerary day",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z.string().openapi({
+          example:
+            "01a0b469-20fb-795b-98ca-89e931968a12",
+        }),
+
+        dayId: z.string().openapi({
+          example:
+            "01a0c123-4567-789a-bcde-123456789abc",
+        }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema:
+              UpdatePackageItineraryDaySchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package itinerary day updated successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid itinerary data",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor only",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package or itinerary day not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to update package itinerary day",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  updatePackageItineraryDayController as any,
+);
+
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "delete",
+
+    path: "/{id}/itinerary/{dayId}",
+
+    tags: ["Package"],
+
+    summary: "Delete package itinerary day",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: DeletePackageItineraryDayParamsSchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package itinerary day deleted successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid request",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor only",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package or itinerary day not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to delete package itinerary day",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  deletePackageItineraryDayController as any,
+);
+
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "post",
+
+    path: "/{id}/itinerary/day",
+
+    tags: ["Package"],
+
+    summary: "Add itinerary day to package",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z
+          .string()
+          .min(1, "Package ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a12",
+          }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema: PackageItineraryDaySchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      201: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package itinerary day added successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid itinerary day data",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only update own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Package not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Itinerary day number already exists",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to add package itinerary day",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  addPackageItineraryDayController as any,
 );
