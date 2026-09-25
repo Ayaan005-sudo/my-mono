@@ -1,6 +1,6 @@
 import type { MasterTrek, ScheduleType } from "@mono/database";
 import { uuidv7 } from "uuidv7";
-import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, GetMyActivitiesQuery, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput } from "../types/package.js";
+import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, GetMyActivitiesQuery, SearchPackagesQuery, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput } from "../types/package.js";
 import { prisma } from "../utils/prisma.js";
 
 export const createPackage = async (
@@ -923,3 +923,212 @@ export const findVendorPackages = async (
     total,
   };
 };
+
+export const searchPublicPackages = async (
+  query: SearchPackagesQuery,
+  now: Date,
+) => {
+  const {
+    search,
+    difficulty,
+    startDate,
+    endDate,
+    minPrice,
+    maxPrice,
+    minDuration,
+    maxDuration,
+    page,
+    limit,
+  } = query;
+
+  const skip = (page - 1) * limit;
+
+  const priceFilter =
+    minPrice !== undefined || maxPrice !== undefined
+      ? {
+          OR: [
+            {
+              price: {
+                ...(minPrice !== undefined && {
+                  gte: minPrice,
+                }),
+                ...(maxPrice !== undefined && {
+                  lte: maxPrice,
+                }),
+              },
+            },
+            {
+              AND: [
+                ...(minPrice !== undefined
+                  ? [
+                      { adultPrice: { gte: minPrice } },
+                      { childPrice: { gte: minPrice } },
+                    ]
+                  : []),
+                ...(maxPrice !== undefined
+                  ? [
+                      {
+                        OR: [
+                          { adultPrice: { lte: maxPrice } },
+                          { childPrice: { lte: maxPrice } },
+                        ],
+                      },
+                    ]
+                  : []),
+              ],
+            },
+          ],
+        }
+      : {};
+
+  const scheduleWhere: any = {
+    status: "OPEN",
+    availableSeats: {
+      gt: 0,
+    },
+    startDate: {
+      gt: now,
+      ...(startDate && {
+        gte: startDate,
+      }),
+      ...(endDate && {
+        lte: endDate,
+      }),
+    },
+    ...priceFilter,
+  };
+
+  const where: any = {
+    status: "PUBLISHED",
+    visibility: "PUBLIC",
+
+    ...(difficulty && {
+      difficulty,
+    }),
+
+    ...((minDuration !== undefined || maxDuration !== undefined) && {
+      durationDays: {
+        ...(minDuration !== undefined && {
+          gte: minDuration,
+        }),
+        ...(maxDuration !== undefined && {
+          lte: maxDuration,
+        }),
+      },
+    }),
+
+    ...(search && {
+      OR: [
+        {
+          title: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          masterTrek: {
+            is: {
+              name: {
+                contains: search,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      ],
+    }),
+
+    ...((startDate || endDate || minPrice !== undefined || maxPrice !== undefined) && {
+      schedules: {
+        some: scheduleWhere,
+      },
+    }),
+  };
+
+  const [packages, total] = await Promise.all([
+    prisma.package.findMany({
+      where,
+
+      select: {
+        id: true,
+        title: true,
+        galleryImages: true,
+        difficulty: true,
+        durationDays: true,
+
+        location: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+
+        schedules: {
+          where: scheduleWhere,
+
+          select: {
+            id: true,
+            price: true,
+            adultPrice: true,
+            childPrice: true,
+            currency: true,
+            startDate: true,
+            endDate: true,
+            availableSeats: true,
+          },
+
+          orderBy: {
+            startDate: "asc",
+          },
+        },
+      },
+
+      skip,
+      take: limit,
+
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+
+    prisma.package.count({
+      where,
+    }),
+  ]);
+
+  return {
+    packages,
+    total,
+  };
+};
+
+const getScheduleDisplayPrice = (schedule: {
+  price: number | null;
+  adultPrice: number | null;
+  childPrice: number | null;
+}): number | null => {
+  if (schedule.price !== null) {
+    return schedule.price;
+  }
+
+  if (
+    schedule.adultPrice !== null &&
+    schedule.childPrice !== null
+  ) {
+    return Math.min(
+      schedule.adultPrice,
+      schedule.childPrice,
+    );
+  }
+
+  return null;
+};
+

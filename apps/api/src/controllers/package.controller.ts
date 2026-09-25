@@ -2,9 +2,9 @@ import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
 import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
-import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, openPackageScheduleService, publishPackageService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
+import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, openPackageScheduleService, publishPackageService, searchPublicPackagesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
-import { GetMyActivitiesQuerySchema } from "../validators/package.validator.js";
+import { GetMyActivitiesQuerySchema, SearchPackagesQuerySchema } from "../validators/package.validator.js";
 
 export const createPackage = async (
   c: Context,
@@ -1046,6 +1046,48 @@ export const getMyActivitiesController = async (
 
     return ApiResponse.error(
       "Failed to fetch my activities",
+      500,
+    ).send(c);
+  }
+};
+
+export const searchPublicPackagesController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const query =
+      SearchPackagesQuerySchema.parse(
+        c.req.query(),
+      );
+
+    const result =
+      await searchPublicPackagesService(query);
+
+    logger.info(
+      { query },
+      "Public packages fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Packages fetched successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to fetch public packages",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to fetch packages",
       500,
     ).send(c);
   }

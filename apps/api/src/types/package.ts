@@ -1,5 +1,5 @@
 import type { DepositType, Difficulty, PackageStatus, ScheduleStatus, ScheduleType } from "@mono/database";
-import type { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, GetMyActivitiesQuerySchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
+import type { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, GetMyActivitiesQuerySchema, PackageItineraryDaySchema, SearchPackagesQuerySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 import z from "zod";
 
 export type CreatePackageInput = {
@@ -392,6 +392,49 @@ export type MyActivityItem = {
 
 export type GetMyActivitiesResponse = {
   items: MyActivityItem[];
+
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
+
+export type SearchPackagesQuery = z.infer<
+  typeof SearchPackagesQuerySchema
+>;
+
+export type PublicPackageSearchItem = {
+  id: string;
+  title: string | null;
+  galleryImages: string[];
+
+  location: {
+    id: string;
+    name: string;
+  } | null;
+
+ difficulty: Difficulty | null;
+
+  durationDays: number | null;
+
+  trekLeader: {
+    id: string;
+    name: string | null;
+    avatarUrl: string | null;
+  } | null;
+
+  rating: number | null;
+
+  startingPrice: number | null;
+  originalPrice: number | null;
+  currency: string | null;
+};
+
+export type SearchPackagesResponse = {
+  items: PublicPackageSearchItem[];
 
   pagination: {
     page: number;

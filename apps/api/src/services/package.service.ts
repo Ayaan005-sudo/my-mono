@@ -25,13 +25,14 @@ import {
   getVendorPackageCreationProfile,
   openPackageSchedule,
   publishPackage,
+  searchPublicPackages,
   updatePackageBasics,
   updatePackageInclusions,
   updatePackageItineraryDay,
   updatePackageSchedule,
   updatePackageScheduleType,
 } from "../repositories/package.repository.js";
-import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeactivatePackageResponse, DeletePackageItineraryDayResponse, GetMyActivitiesQuery, GetMyActivitiesResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, OpenPackageScheduleResponse, PackageScheduleDisplayStatus, PublishPackageResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
+import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeactivatePackageResponse, DeletePackageItineraryDayResponse, GetMyActivitiesQuery, GetMyActivitiesResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, OpenPackageScheduleResponse, PackageScheduleDisplayStatus, PublicPackageSearchItem, PublishPackageResponse, SearchPackagesQuery, SearchPackagesResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -1233,3 +1234,98 @@ export const getMyActivitiesService = async (
   };
 };
 
+
+
+export const searchPublicPackagesService = async (
+  query: SearchPackagesQuery,
+): Promise<SearchPackagesResponse> => {
+  const now = new Date();
+
+  const { packages, total } =
+    await searchPublicPackages(query, now);
+
+    const getScheduleDisplayPrice = (schedule: {
+  price: number | null;
+  adultPrice: number | null;
+  childPrice: number | null;
+}): number | null => {
+  if (schedule.price !== null) {
+    return schedule.price;
+  }
+
+  if (
+    schedule.adultPrice !== null &&
+    schedule.childPrice !== null
+  ) {
+    return Math.min(
+      schedule.adultPrice,
+      schedule.childPrice,
+    );
+  }
+
+  return null;
+};
+
+    const getStartingPrice = (
+  schedules: Array<{
+    price: number | null;
+    adultPrice: number | null;
+    childPrice: number | null;
+  }>,
+): number | null => {
+  const prices = schedules
+    .map(getScheduleDisplayPrice)
+    .filter(
+      (price): price is number =>
+        price !== null,
+    );
+
+  return prices.length > 0
+    ? Math.min(...prices)
+    : null;
+};
+
+
+  const items: PublicPackageSearchItem[] = packages.map(
+    (pkg) => {
+      const startingPrice = getStartingPrice(
+        pkg.schedules,
+      );
+      const firstSchedule = pkg.schedules[0] ?? null;
+
+      return {
+        id: pkg.id,
+        title: pkg.title,
+        galleryImages: pkg.galleryImages,
+        location: pkg.location,
+        difficulty: pkg.difficulty,
+        durationDays: pkg.durationDays,
+
+        trekLeader: pkg.createdBy
+          ? {
+              id: pkg.createdBy.id,
+              name: pkg.createdBy.name,
+              avatarUrl: pkg.createdBy.avatarUrl,
+            }
+          : null,
+
+        rating: null,
+
+        startingPrice,
+        originalPrice: null,
+        currency: firstSchedule?.currency ?? null,
+      };
+    },
+  );
+
+  return {
+    items,
+
+    pagination: {
+      page: query.page,
+      limit: query.limit,
+      total,
+      totalPages: Math.ceil(total / query.limit),
+    },
+  };
+};

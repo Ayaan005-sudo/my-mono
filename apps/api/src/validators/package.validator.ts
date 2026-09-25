@@ -499,3 +499,114 @@ export const GetMyActivitiesQuerySchema = z.object({
       example: 10,
     }),
 });
+
+
+export const SearchPackagesQuerySchema = z.object({
+  search: z
+    .string()
+    .min(1)
+    .optional()
+    .openapi({
+      example: "Triund",
+    }),
+
+  difficulty: z
+    .nativeEnum(Difficulty)
+    .optional()
+    .openapi({
+      example: "MODERATE",
+    }),
+
+  startDate: z.coerce
+    .date()
+    .optional()
+    .openapi({
+      example: "2026-10-10",
+    }),
+
+  endDate: z.coerce
+    .date()
+    .optional()
+    .openapi({
+      example: "2026-10-20",
+    }),
+
+  minPrice: z.coerce
+    .number()
+    .min(0)
+    .optional()
+    .openapi({
+      example: 1000,
+    }),
+
+  maxPrice: z.coerce
+    .number()
+    .min(0)
+    .optional()
+    .openapi({
+      example: 5000,
+    }),
+
+  minDuration: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .openapi({
+      example: 2,
+    }),
+
+  maxDuration: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .openapi({
+      example: 5,
+    }),
+
+  page: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .default(1)
+    .openapi({
+      example: 1,
+    }),
+
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .optional()
+    .default(12)
+    .openapi({
+      example: 12,
+    }),
+}).superRefine((query, context) => {
+  if (
+    query.minPrice !== undefined &&
+    query.maxPrice !== undefined &&
+    query.minPrice > query.maxPrice
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["maxPrice"],
+      message: "maxPrice must be greater than or equal to minPrice",
+    });
+  }
+
+  if (
+    query.minDuration !== undefined &&
+    query.maxDuration !== undefined &&
+    query.minDuration > query.maxDuration
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["maxDuration"],
+      message: "maxDuration must be greater than or equal to minDuration",
+    });
+  }
+});
