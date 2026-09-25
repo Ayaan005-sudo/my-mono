@@ -769,3 +769,27 @@ export const bulkCancelPackageSchedules = async (
     },
   });
 };
+
+
+export const openPackageSchedule = async (
+  scheduleId: string,
+) => {
+  return prisma.packageSchedule.update({
+    where: {
+      id: scheduleId,
+    },
+
+    data: {
+      status: "OPEN",
+      publishedAt: new Date(),
+    },
+
+    select: {
+      id: true,
+      packageId: true,
+      status: true,
+      publishedAt: true,
+      updatedAt: true,
+    },
+  });
+};

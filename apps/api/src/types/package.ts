@@ -344,3 +344,12 @@ export type BulkCancelPackageSchedulesInput =
 export type BulkCancelPackageSchedulesResponse = {
   cancelledCount: number;
 };
+
+export type OpenPackageScheduleResponse = {
+  id: string;
+  packageId: string;
+  status: ScheduleStatus;
+  publishedAt: Date | null;
+  updatedAt: Date;
+};
+

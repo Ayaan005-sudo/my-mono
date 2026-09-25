@@ -20,13 +20,14 @@ import {
   findRouteForMasterTrek,
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
+  openPackageSchedule,
   updatePackageBasics,
   updatePackageInclusions,
   updatePackageItineraryDay,
   updatePackageSchedule,
   updatePackageScheduleType,
 } from "../repositories/package.repository.js";
-import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, PackageScheduleDisplayStatus, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
+import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, OpenPackageScheduleResponse, PackageScheduleDisplayStatus, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -985,4 +986,70 @@ export const bulkCancelPackageSchedulesService = async (
   return {
     cancelledCount: result.count,
   };
+};
+
+export const openPackageScheduleService = async (
+  userId: string,
+  packageId: string,
+  scheduleId: string,
+): Promise<OpenPackageScheduleResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to manage this package",
+      403,
+    );
+  }
+
+  const existingSchedule =
+    await findPackageScheduleById(scheduleId);
+
+  if (
+    !existingSchedule ||
+    existingSchedule.packageId !== packageId
+  ) {
+    throw new CustomError(
+      "Package schedule not found",
+      404,
+    );
+  }
+
+  if (existingSchedule.status === "OPEN") {
+    throw new CustomError(
+      "Package schedule is already open",
+      409,
+    );
+  }
+
+  if (existingSchedule.status === "CANCELLED") {
+    throw new CustomError(
+      "Cancelled schedule cannot be opened",
+      400,
+    );
+  }
+
+  if (existingSchedule.status === "COMPLETED") {
+    throw new CustomError(
+      "Completed schedule cannot be opened",
+      400,
+    );
+  }
+
+  if (existingSchedule.status !== "DRAFT") {
+    throw new CustomError(
+      "Only draft schedules can be opened",
+      400,
+    );
+  }
+
+  return openPackageSchedule(scheduleId);
 };

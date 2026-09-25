@@ -2,7 +2,7 @@ import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
 import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
-import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
+import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, openPackageScheduleService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
 
 export const createPackage = async (
@@ -838,6 +838,65 @@ export const bulkCancelPackageSchedulesController = async (
 
     return ApiResponse.error(
       "Failed to cancel package schedules",
+      500,
+    ).send(c);
+  }
+};
+
+export const openPackageScheduleController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+    const scheduleId = c.req.param("scheduleId");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    if (!scheduleId) {
+      return ApiResponse.error(
+        "Schedule ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await openPackageScheduleService(
+        userId,
+        packageId,
+        scheduleId,
+      );
+
+    logger.info(
+      { userId, packageId, scheduleId },
+      "Package schedule opened successfully",
+    );
+
+    return ApiResponse.success(
+      "Package schedule opened successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to open package schedule",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to open package schedule",
       500,
     ).send(c);
   }

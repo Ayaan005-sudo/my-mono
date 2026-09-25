@@ -4,7 +4,7 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, getPackageSchedulesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
+import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, getPackageSchedulesController, openPackageScheduleController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
 import { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetPackageRoutesParamsSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 
 
@@ -1587,4 +1587,122 @@ PackageRoutes.openapi(
   }),
 
   updatePackageScheduleController as any,
+);
+
+
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{id}/schedules/{scheduleId}/open",
+
+    tags: ["Package"],
+
+    summary: "Open package schedule",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z
+          .string()
+          .min(1, "Package ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a12",
+          }),
+
+        scheduleId: z
+          .string()
+          .min(1, "Schedule ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a13",
+          }),
+      }),
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package schedule opened successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Schedule cannot be opened",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only manage own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package or schedule not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package schedule is already open",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to open package schedule",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  openPackageScheduleController as any,
 );
