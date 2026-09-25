@@ -7,11 +7,13 @@ import {
   createPackage,
   createPackageItinerary,
   createPackageSchedule,
+  deactivatePackage,
   deletePackageItineraryDay,
   findMasterTrekById,
   findMasterTrekItinerary,
   findMasterTrekRoutes,
   findPackageById,
+  findPackageForPublish,
   findPackageItineraryDay,
   findPackageItineraryDayByNumber,
   findPackageScheduleById,
@@ -21,13 +23,14 @@ import {
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
   openPackageSchedule,
+  publishPackage,
   updatePackageBasics,
   updatePackageInclusions,
   updatePackageItineraryDay,
   updatePackageSchedule,
   updatePackageScheduleType,
 } from "../repositories/package.repository.js";
-import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, OpenPackageScheduleResponse, PackageScheduleDisplayStatus, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
+import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeactivatePackageResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, OpenPackageScheduleResponse, PackageScheduleDisplayStatus, PublishPackageResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -1052,4 +1055,126 @@ export const openPackageScheduleService = async (
   }
 
   return openPackageSchedule(scheduleId);
+};
+
+
+export const publishPackageService = async (
+  userId: string,
+  packageId: string,
+): Promise<PublishPackageResponse> => {
+  const existingPackage =
+    await findPackageForPublish(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to manage this package",
+      403,
+    );
+  }
+
+  if (existingPackage.status === "PUBLISHED") {
+    throw new CustomError(
+      "Package is already published",
+      409,
+    );
+  }
+
+  if (existingPackage.status === "CANCELLED") {
+    throw new CustomError(
+      "Cancelled package cannot be published",
+      400,
+    );
+  }
+
+  if (!existingPackage.title) {
+    throw new CustomError(
+      "Package title is required before publishing",
+      400,
+    );
+  }
+
+  if (!existingPackage.locationId) {
+    throw new CustomError(
+      "Package location is required before publishing",
+      400,
+    );
+  }
+
+  if (
+    !existingPackage.durationDays ||
+    !existingPackage.difficulty
+  ) {
+    throw new CustomError(
+      "Package basics must be completed before publishing",
+      400,
+    );
+  }
+
+  if (existingPackage.itineraryDays.length === 0) {
+    throw new CustomError(
+      "Package itinerary is required before publishing",
+      400,
+    );
+  }
+
+  if (existingPackage.schedules.length === 0) {
+    throw new CustomError(
+      "At least one schedule is required before publishing",
+      400,
+    );
+  }
+
+  return publishPackage(packageId);
+};
+
+export const deactivatePackageService = async (
+  userId: string,
+  packageId: string,
+): Promise<DeactivatePackageResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to manage this package",
+      403,
+    );
+  }
+
+  if (existingPackage.status === "INACTIVE") {
+    throw new CustomError(
+      "Package is already deactivated",
+      409,
+    );
+  }
+
+  if (existingPackage.status === "DRAFT") {
+    throw new CustomError(
+      "Draft package cannot be deactivated",
+      400,
+    );
+  }
+
+  if (existingPackage.status === "CANCELLED") {
+    throw new CustomError(
+      "Cancelled package cannot be deactivated",
+      400,
+    );
+  }
+
+  return deactivatePackage(packageId);
 };

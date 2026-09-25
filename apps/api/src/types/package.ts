@@ -353,3 +353,17 @@ export type OpenPackageScheduleResponse = {
   updatedAt: Date;
 };
 
+
+export type PublishPackageResponse = {
+  id: string;
+  title: string | null;
+  status: PackageStatus;
+  updatedAt: Date;
+};
+
+export type DeactivatePackageResponse = {
+  id: string;
+  title: string | null;
+  status: PackageStatus;
+  updatedAt: Date;
+};

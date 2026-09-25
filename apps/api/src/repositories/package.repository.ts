@@ -793,3 +793,56 @@ export const openPackageSchedule = async (
     },
   });
 };
+
+export const findPackageForPublish = async (
+  packageId: string,
+) => {
+  return prisma.package.findUnique({
+    where: {
+      id: packageId,
+    },
+    include: {
+      itineraryDays: true,
+      schedules: true,
+    },
+  });
+};
+
+export const publishPackage = async (
+  packageId: string,
+) => {
+  return prisma.package.update({
+    where: {
+      id: packageId,
+    },
+    data: {
+      status: "PUBLISHED",
+    },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      updatedAt: true,
+    },
+  });
+};
+
+
+export const deactivatePackage = async (
+  packageId: string,
+) => {
+  return prisma.package.update({
+    where: {
+      id: packageId,
+    },
+    data: {
+      status: "INACTIVE",
+    },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      updatedAt: true,
+    },
+  });
+};

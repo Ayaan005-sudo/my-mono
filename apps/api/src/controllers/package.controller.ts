@@ -2,7 +2,7 @@ import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
 import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
-import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, openPackageScheduleService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
+import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, openPackageScheduleService, publishPackageService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
 
 export const createPackage = async (
@@ -897,6 +897,107 @@ export const openPackageScheduleController = async (
 
     return ApiResponse.error(
       "Failed to open package schedule",
+      500,
+    ).send(c);
+  }
+};
+
+
+export const publishPackageController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await publishPackageService(
+        userId,
+        packageId,
+      );
+
+    logger.info(
+      { userId, packageId },
+      "Package published successfully",
+    );
+
+    return ApiResponse.success(
+      "Package published successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to publish package",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to publish package",
+      500,
+    ).send(c);
+  }
+};
+
+export const deactivatePackageController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await deactivatePackageService(
+        userId,
+        packageId,
+      );
+
+    logger.info(
+      { userId, packageId },
+      "Package deactivated successfully",
+    );
+
+    return ApiResponse.success(
+      "Package deactivated successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to deactivate package",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to deactivate package",
       500,
     ).send(c);
   }

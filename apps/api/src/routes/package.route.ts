@@ -4,7 +4,7 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, getPackageSchedulesController, openPackageScheduleController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
+import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deactivatePackageController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, getPackageSchedulesController, openPackageScheduleController, publishPackageController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
 import { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetPackageRoutesParamsSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 
 
@@ -1705,4 +1705,219 @@ PackageRoutes.openapi(
   }),
 
   openPackageScheduleController as any,
+);
+
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{id}/publish",
+
+    tags: ["Package"],
+
+    summary: "Publish package",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z
+          .string()
+          .min(1, "Package ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a12",
+          }),
+      }),
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package published successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package is incomplete or cannot be published",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only manage own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Package not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package is already published",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to publish package",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  publishPackageController as any,
+);
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{id}/deactivate",
+
+    tags: ["Package"],
+
+    summary: "Deactivate package",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z
+          .string()
+          .min(1, "Package ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a12",
+          }),
+      }),
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package deactivated successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package cannot be deactivated",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only manage own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Package not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package is already deactivated",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to deactivate package",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  deactivatePackageController as any,
 );
