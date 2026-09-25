@@ -1,3 +1,4 @@
+import { BookingStatus } from "@mono/database";
 import z from "zod";
 
 export const VendorIdParamSchema = z
@@ -10,3 +11,12 @@ export const VendorIdParamSchema = z
       }),
   })
   .openapi("VendorIdParam");
+
+
+  export const VendorBookingsQuerySchema = z.object({
+  search: z.string().optional(),
+  status: z.nativeEnum(BookingStatus).optional(),
+  packageId: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(10),
+  cursor: z.string().optional(),
+});

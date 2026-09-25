@@ -1,6 +1,6 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { getVendorDashboardController, getVendorPublicProfileController } from "../controllers/vendor.controller.js";
-import { VendorIdParamSchema } from "../validators/vendor.validator.js";
+import { getVendorBookingsController, getVendorDashboardController, getVendorPublicProfileController } from "../controllers/vendor.controller.js";
+import { VendorBookingsQuerySchema, VendorIdParamSchema } from "../validators/vendor.validator.js";
 import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
 export const VendorRoutes = new OpenAPIHono();
 
@@ -95,3 +95,40 @@ VendorRoutes.openapi(
 	}),
 	getVendorDashboardController as any,
 );
+
+VendorRoutes.openapi(
+	createRoute({
+		method: "get",
+		path: "/bookings",
+		tags: ["Vendor"],
+		summary: "Get vendor bookings",
+		security: [{ bearerAuth: [] }],
+		request: {
+			query: VendorBookingsQuerySchema,
+		},
+		responses: {
+			200: {
+				content: { "application/json": { schema: SuccessSchema } },
+				description: "Vendor bookings fetched successfully",
+			},
+			400: {
+				content: { "application/json": { schema: ErrorSchema } },
+				description: "Invalid vendor bookings query",
+			},
+			401: {
+				content: { "application/json": { schema: ErrorSchema } },
+				description: "Unauthorized",
+			},
+			403: {
+				content: { "application/json": { schema: ErrorSchema } },
+				description: "Vendor role required",
+			},
+			500: {
+				content: { "application/json": { schema: ErrorSchema } },
+				description: "Failed to fetch vendor bookings",
+			},
+		},
+		middleware: [authMiddleware, requireRole("VENDOR")],
+	}),
+	getVendorBookingsController as any,
+)

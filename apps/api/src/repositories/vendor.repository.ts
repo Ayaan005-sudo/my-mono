@@ -1,4 +1,4 @@
-import type { VendorDashboardRepositoryData, VendorPublicProfileResponse } from "../types/index.js";
+import type { VendorBookingsQuery, VendorBookingsRepositoryData, VendorDashboardRepositoryData, VendorPublicProfileResponse } from "../types/index.js";
 import { prisma } from "../utils/prisma.js";
 
 
@@ -356,5 +356,173 @@ export const getVendorDashboardData = async (
       maxParticipants: schedule.maxParticipants,
       status: schedule.status,
     })),
+  };
+};
+
+export const getVendorBookingsData = async (
+  userId: string,
+  query: VendorBookingsQuery,
+  now: Date,
+): Promise<VendorBookingsRepositoryData> => {
+ const packageFilter = {
+  createdByUserId: userId,
+
+  OR: [
+    { teamId: null },
+    {
+      teamId: {
+        isSet: false,
+      },
+    },
+  ],
+
+  ...(query.packageId && {
+    id: query.packageId,
+  }),
+};
+
+  const where = {
+    ...(query.status && { status: query.status }),
+    ...(query.search && {
+      OR: [
+        {
+          id: {
+            contains: query.search,
+          },
+        },
+        {
+          user: {
+            name: {
+              contains: query.search,
+              mode: "insensitive" as const,
+            },
+          },
+        },
+        {
+          schedule: {
+            package: {
+              ...packageFilter,
+              title: {
+                contains: query.search,
+                mode: "insensitive" as const,
+              },
+            },
+          },
+        },
+      ],
+    }),
+    schedule: {
+      package: packageFilter,
+    },
+  };
+
+  const [bookings, totalBookings, pendingBookings, revenue, upcomingTreks] =
+    await Promise.all([
+      prisma.packageBooking.findMany({
+        where,
+        take: query.limit + 1,
+        ...(query.cursor
+          ? {
+              cursor: {
+                id: query.cursor,
+              },
+              skip: 1,
+            }
+          : {}),
+        orderBy: [
+          { bookedAt: "desc" },
+          { id: "desc" },
+        ],
+        select: {
+          id: true,
+          adultCount: true,
+          childCount: true,
+          totalAmount: true,
+          currency: true,
+          status: true,
+          bookedAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+            },
+          },
+          schedule: {
+            select: {
+              id: true,
+              startDate: true,
+              endDate: true,
+              package: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.packageBooking.count({ where }),
+      prisma.packageBooking.count({
+        where: {
+          ...where,
+          status: "PENDING",
+        },
+      }),
+      prisma.payment.aggregate({
+        where: {
+          status: "SUCCESS",
+          booking: {
+            status: {
+              in: ["CONFIRMED", "COMPLETED"],
+            },
+            schedule: {
+              package: packageFilter,
+            },
+          },
+        },
+        _sum: {
+          amount: true,
+        },
+      }),
+      prisma.packageSchedule.count({
+        where: {
+          status: "OPEN",
+          startDate: {
+            gte: now,
+          },
+          package: {
+            ...packageFilter,
+            status: "PUBLISHED",
+            visibility: "PUBLIC",
+          },
+        },
+      }),
+    ]);
+
+  return {
+    bookings: bookings.map((booking) => ({
+      bookingId: booking.id,
+      trekker: booking.user,
+      package: booking.schedule.package,
+      schedule: {
+        id: booking.schedule.id,
+        startDate: booking.schedule.startDate,
+        endDate: booking.schedule.endDate,
+      },
+      adultCount: booking.adultCount,
+      childCount: booking.childCount,
+      participantCount:
+        booking.adultCount + booking.childCount,
+      totalAmount: booking.totalAmount,
+      currency: booking.currency,
+      status: booking.status,
+      bookedAt: booking.bookedAt,
+    })),
+    totalBookings,
+    pendingBookings,
+    confirmedRevenue: revenue._sum.amount ?? 0,
+    upcomingTreks,
   };
 };

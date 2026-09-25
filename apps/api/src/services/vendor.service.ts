@@ -1,5 +1,5 @@
-import { findVendorPublicProfileById, getVendorDashboardData } from "../repositories/vendor.repository.js";
-import type { VendorDashboardResponse, VendorPublicProfileResponse } from "../types/index.js";
+import { findVendorPublicProfileById, getVendorBookingsData, getVendorDashboardData } from "../repositories/vendor.repository.js";
+import type { VendorBookingsQuery, VendorBookingsResponse, VendorDashboardResponse, VendorPublicProfileResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 
@@ -82,5 +82,36 @@ export const getVendorDashboardService = async (
 		revenueTrend,
 		pendingBookings: data.pendingBookings,
 		activeTreks: data.activeTreks,
+	};
+};
+
+
+export const getVendorBookingsService = async (
+	userId: string,
+	query: VendorBookingsQuery,
+): Promise<VendorBookingsResponse> => {
+	const data = await getVendorBookingsData(
+		userId,
+		query,
+		new Date(),
+	);
+	const hasNextPage =
+		data.bookings.length > query.limit;
+	const bookings = hasNextPage
+		? data.bookings.slice(0, query.limit)
+		: data.bookings;
+
+	return {
+		summary: {
+			totalBookings: data.totalBookings,
+			pendingBookings: data.pendingBookings,
+			confirmedRevenue: data.confirmedRevenue,
+			upcomingTreks: data.upcomingTreks,
+		},
+		bookings,
+		nextCursor: hasNextPage
+			? bookings[bookings.length - 1]?.bookingId ?? null
+			: null,
+		hasNextPage,
 	};
 };

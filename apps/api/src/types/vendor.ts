@@ -1,3 +1,5 @@
+import type z from "zod";
+import type { VendorBookingsQuerySchema } from "../validators/vendor.validator.js";
 
 
 export type VendorPublicProfileResponse = {
@@ -175,3 +177,15 @@ export type VendorDashboardRepositoryData = {
   pendingBookings: VendorPendingBookingItem[];
   activeTreks: VendorActiveTrekItem[];
 };
+
+export type VendorBookingsRepositoryData = {
+  bookings: VendorBookingListItem[];
+  totalBookings: number;
+  pendingBookings: number;
+  confirmedRevenue: number;
+  upcomingTreks: number;
+};
+
+export type VendorBookingsQuery = z.infer<
+  typeof VendorBookingsQuerySchema
+>;

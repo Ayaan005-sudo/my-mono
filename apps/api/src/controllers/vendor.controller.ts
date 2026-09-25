@@ -2,7 +2,8 @@ import type { Context } from "hono";
 import ApiResponse from "../utils/api-response.js";
 import { CustomError } from "../utils/custom-error.js";
 import { logger } from "../utils/logger.js";
-import { getVendorDashboardService, getVendorPublicProfileService } from "../services/vendor.service.js";
+import { getVendorBookingsService, getVendorDashboardService, getVendorPublicProfileService } from "../services/vendor.service.js";
+import type { VendorBookingsQuery } from "../types/vendor.js";
 
 
 export const getVendorPublicProfileController = async (
@@ -100,4 +101,65 @@ export const getVendorDashboardController = async (
 			500,
 		).send(c);
 	}
+};
+
+
+export const getVendorBookingsController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+
+    const query = c.req.valid(
+      "query" as never,
+    ) as VendorBookingsQuery;
+
+    const result =
+      await getVendorBookingsService(
+        userId,
+        query,
+      );
+
+    logger.info(
+      {
+        userId,
+      },
+      "Vendor bookings fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Vendor bookings fetched successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      logger.warn(
+        {
+          error,
+          userId: c.get("userId"),
+        },
+        "Failed to fetch vendor bookings",
+      );
+
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    logger.error(
+      {
+        error,
+        userId: c.get("userId"),
+      },
+      "Failed to fetch vendor bookings",
+    );
+
+    return ApiResponse.error(
+      "Failed to fetch vendor bookings",
+      500,
+    ).send(c);
+  }
 };
