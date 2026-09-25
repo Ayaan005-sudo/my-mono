@@ -1,5 +1,5 @@
-import { createBooking, findBookingDetailById, findScheduleForBooking } from "../repositories/booking.repository.js";
-import type { CreateBookingInput, CreateBookingResponse, GetBookingDetailResponse } from "../types/booking.js";
+import { createBooking, findBookingDetailById, findScheduleForBooking, updateBookingContactInfo } from "../repositories/booking.repository.js";
+import type { CreateBookingInput, CreateBookingResponse, GetBookingDetailResponse, UpdateBookingContactInfoInput, UpdateBookingContactInfoResponse } from "../types/booking.js";
 import { CustomError } from "../utils/custom-error.js";
 
 
@@ -263,4 +263,40 @@ export const getBookingDetailService = async (
         booking.schedule.cancellationPolicy,
     },
   };
+};
+
+
+export const updateBookingContactInfoService = async (
+  userId: string,
+  bookingId: string,
+  input: UpdateBookingContactInfoInput,
+): Promise<UpdateBookingContactInfoResponse> => {
+  const booking =
+    await findBookingDetailById(bookingId);
+
+  if (!booking) {
+    throw new CustomError(
+      "Booking not found",
+      404,
+    );
+  }
+
+  if (booking.userId !== userId) {
+    throw new CustomError(
+      "You are not authorized to update this booking",
+      403,
+    );
+  }
+
+  if (booking.status !== "PENDING") {
+    throw new CustomError(
+      "Only pending bookings can be updated",
+      400,
+    );
+  }
+
+  return updateBookingContactInfo(
+    bookingId,
+    input,
+  );
 };

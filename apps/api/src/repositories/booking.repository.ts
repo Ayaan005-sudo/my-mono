@@ -1,6 +1,6 @@
 import { uuidv7 } from "uuidv7";
 import { prisma } from "../utils/prisma.js";
-import type { CreateBookingRepoInput, CreateBookingResponse } from "../types/booking.js";
+import type { CreateBookingRepoInput, CreateBookingResponse, UpdateBookingContactInfoInput } from "../types/booking.js";
 
 
 export const findScheduleForBooking = async (
@@ -164,6 +164,53 @@ export const findBookingDetailById = async (
           },
         },
       },
+    },
+  });
+};
+
+
+export const updateBookingContactInfo = async (
+  bookingId: string,
+  input: UpdateBookingContactInfoInput,
+) => {
+  return prisma.packageBooking.update({
+    where: {
+      id: bookingId,
+    },
+
+    data: {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      phone: input.phone,
+
+      address: input.address,
+      city: input.city,
+      state: input.state,
+      country: input.country,
+      pinCode: input.pinCode,
+
+      message: input.message ?? null,
+    },
+
+    select: {
+      id: true,
+
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+
+      address: true,
+      city: true,
+      state: true,
+      country: true,
+      pinCode: true,
+
+      message: true,
+
+      status: true,
+      updatedAt: true,
     },
   });
 };

@@ -1,4 +1,4 @@
-import type { CreateBookingSchema } from "../validators/booking.validator.js";
+import type { CreateBookingSchema, UpdateBookingContactInfoSchema } from "../validators/booking.validator.js";
 import type { z } from "zod";
 
 
@@ -78,3 +78,31 @@ export type GetBookingDetailResponse = {
     cancellationPolicy: string | null;
   };
 };
+
+
+export type UpdateBookingContactInfoInput =
+  z.infer<typeof UpdateBookingContactInfoSchema>;
+
+
+  export type UpdateBookingContactInfoResponse = {
+  id: string;
+
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  pinCode: string | null;
+
+  message: string | null;
+
+  status: string;
+
+  updatedAt: Date;
+};
+
+

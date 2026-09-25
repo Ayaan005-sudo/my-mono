@@ -8,8 +8,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { createBookingController, getBookingDetailController } from "../controllers/booking.controller.js";
-import { BookingIdParamSchema, CreateBookingSchema } from "../validators/booking.validator.js";
+import { createBookingController, getBookingDetailController, updateBookingContactInfoController } from "../controllers/booking.controller.js";
+import { BookingIdParamSchema, CreateBookingSchema, UpdateBookingContactInfoSchema } from "../validators/booking.validator.js";
 
 
 
@@ -190,3 +190,98 @@ BookingRoutes.openapi(
 
   getBookingDetailController as any,
 );
+
+BookingRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{bookingId}/contact-info",
+
+    tags: ["Booking"],
+
+    summary:
+      "Update booking contact information",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: BookingIdParamSchema,
+
+      body: {
+        content: {
+          "application/json": {
+            schema:
+              UpdateBookingContactInfoSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        description:
+          "Booking contact information updated successfully",
+
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+      },
+
+      400: {
+        description:
+          "Invalid contact information",
+
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+      },
+
+      403: {
+        description: "Forbidden",
+
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+      },
+
+      404: {
+        description: "Booking not found",
+
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+      },
+
+      500: {
+        description:
+          "Internal server error",
+
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("USER"),
+    ],
+  }),
+
+  updateBookingContactInfoController as any,
+);
+
