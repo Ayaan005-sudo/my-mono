@@ -126,3 +126,73 @@ export type GetBookingPaymentOptionsResponse = {
     };
   };
 };
+
+export type BookingPaymentDisplayStatus =
+  | "UNPAID"
+  | "PARTIALLY_PAID"
+  | "PAID";
+
+export type BookingSummary = {
+  bookingId: string;
+
+  bookingStatus:
+    | "PENDING"
+    | "CONFIRMED"
+    | "CANCELLED"
+    | "COMPLETED";
+
+  bookedAt: Date;
+
+  personalInfo: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    country: string | null;
+    pinCode: string | null;
+
+    message: string | null;
+  };
+
+  orderSummary: {
+    packageId: string;
+    packageTitle: string;
+
+    trekLeader: {
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    };
+
+    scheduleId: string;
+    startDate: Date;
+    endDate: Date;
+
+    adultCount: number;
+    childCount: number;
+
+    cancellationPolicy: string | null;
+  };
+
+  priceSummary: {
+    subtotal: number;
+    discountAmount: number;
+    bookingFee: number;
+    totalAmount: number;
+    currency: string;
+  };
+
+  paymentSummary: {
+    paymentStatus: BookingPaymentDisplayStatus;
+    paymentType: "FULL" | "DEPOSIT" | "BALANCE" | null;
+    amountPaid: number;
+    remainingAmount: number;
+    balanceDueDate: Date | null;
+    paymentGateway: string | null;
+    paidAt: Date | null;
+  };
+};

@@ -262,3 +262,88 @@ export const findBookingForPaymentOptions = async (
     },
   });
 };
+
+
+export const findBookingSummaryById = async (
+  bookingId: string,
+  userId: string,
+) => {
+  return prisma.packageBooking.findFirst({
+    where: {
+      id: bookingId,
+      userId,
+    },
+
+    select: {
+      id: true,
+      status: true,
+      bookedAt: true,
+
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+
+      address: true,
+      city: true,
+      state: true,
+      country: true,
+      pinCode: true,
+      message: true,
+
+      adultCount: true,
+      childCount: true,
+
+      subtotal: true,
+      discountAmount: true,
+      bookingFee: true,
+      totalAmount: true,
+      currency: true,
+
+      balanceDueDate: true,
+
+      payments: {
+        where: {
+          status: "SUCCESS",
+        },
+
+        orderBy: {
+          paidAt: "desc",
+        },
+
+        select: {
+          id: true,
+          amount: true,
+          paymentType: true,
+          paymentGateway: true,
+          status: true,
+          paidAt: true,
+        },
+      },
+
+      schedule: {
+        select: {
+          id: true,
+          startDate: true,
+          endDate: true,
+          cancellationPolicy: true,
+
+          package: {
+            select: {
+              id: true,
+              title: true,
+
+              createdBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+};

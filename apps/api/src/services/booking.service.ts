@@ -1,5 +1,5 @@
-import { createBooking, findBookingDetailById, findBookingForPaymentOptions, findScheduleForBooking, updateBookingContactInfo } from "../repositories/booking.repository.js";
-import type { CreateBookingInput, CreateBookingResponse, GetBookingDetailResponse, GetBookingPaymentOptionsResponse, UpdateBookingContactInfoInput, UpdateBookingContactInfoResponse } from "../types/booking.js";
+import { createBooking, findBookingDetailById, findBookingForPaymentOptions, findBookingSummaryById, findScheduleForBooking, updateBookingContactInfo } from "../repositories/booking.repository.js";
+import type { BookingPaymentDisplayStatus, BookingSummary, CreateBookingInput, CreateBookingResponse, GetBookingDetailResponse, GetBookingPaymentOptionsResponse, UpdateBookingContactInfoInput, UpdateBookingContactInfoResponse } from "../types/booking.js";
 import { CustomError } from "../utils/custom-error.js";
 
 
@@ -475,6 +475,101 @@ export const getBookingPaymentOptionsService = async (
           ? balanceDueDate
           : null,
       },
+    },
+  };
+};
+
+
+export const getBookingSummaryService = async (
+  bookingId: string,
+  userId: string,
+): Promise<BookingSummary> => {
+  const booking =
+    await findBookingSummaryById(
+      bookingId,
+      userId,
+    );
+
+  if (!booking) {
+    throw new CustomError(
+      "Booking not found",
+      404,
+    );
+  }
+
+  const amountPaid = booking.payments.reduce(
+    (total, payment) => total + payment.amount,
+    0,
+  );
+
+  const remainingAmount = Math.max(
+    booking.totalAmount - amountPaid,
+    0,
+  );
+
+  const latestSuccessfulPayment =
+    booking.payments[0] ?? null;
+
+  const paymentStatus: BookingPaymentDisplayStatus =
+    amountPaid <= 0
+      ? "UNPAID"
+      : remainingAmount > 0
+        ? "PARTIALLY_PAID"
+        : "PAID";
+
+  return {
+    bookingId: booking.id,
+    bookingStatus: booking.status,
+    bookedAt: booking.bookedAt,
+
+    personalInfo: {
+      firstName: booking.firstName,
+      lastName: booking.lastName,
+      email: booking.email,
+      phone: booking.phone,
+      address: booking.address,
+      city: booking.city,
+      state: booking.state,
+      country: booking.country,
+      pinCode: booking.pinCode,
+      message: booking.message,
+    },
+
+    orderSummary: {
+      packageId: booking.schedule.package.id,
+      packageTitle: booking.schedule.package.title ?? "",
+      trekLeader: {
+        id: booking.schedule.package.createdBy.id,
+        name: booking.schedule.package.createdBy.name ?? "",
+        avatarUrl: booking.schedule.package.createdBy.avatarUrl,
+      },
+      scheduleId: booking.schedule.id,
+      startDate: booking.schedule.startDate,
+      endDate: booking.schedule.endDate,
+      adultCount: booking.adultCount,
+      childCount: booking.childCount,
+      cancellationPolicy:
+        booking.schedule.cancellationPolicy,
+    },
+
+    priceSummary: {
+      subtotal: booking.subtotal,
+      discountAmount: booking.discountAmount,
+      bookingFee: booking.bookingFee,
+      totalAmount: booking.totalAmount,
+      currency: booking.currency,
+    },
+
+    paymentSummary: {
+      paymentStatus,
+      paymentType:
+        latestSuccessfulPayment?.paymentType ?? null,
+      amountPaid,
+      remainingAmount,
+      balanceDueDate: booking.balanceDueDate,
+      paymentGateway:
+        latestSuccessfulPayment?.paymentGateway ?? null,
+      paidAt: latestSuccessfulPayment?.paidAt ?? null,
     },
   };
 };

@@ -8,7 +8,7 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { createBookingController, getBookingDetailController, getBookingPaymentOptionsController, updateBookingContactInfoController } from "../controllers/booking.controller.js";
+import { createBookingController, getBookingDetailController, getBookingPaymentOptionsController, getBookingSummaryController, updateBookingContactInfoController } from "../controllers/booking.controller.js";
 import { BookingIdParamSchema, CreateBookingSchema, UpdateBookingContactInfoSchema } from "../validators/booking.validator.js";
 
 
@@ -373,3 +373,73 @@ BookingRoutes.openapi(
 
   getBookingPaymentOptionsController as any,
 );
+
+BookingRoutes.openapi(
+  createRoute({
+    method: "get",
+
+    path: "/{bookingId}/summary",
+
+    tags: ["Booking"],
+
+    summary: "Get booking reservation summary",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: BookingIdParamSchema,
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Booking summary fetched successfully",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Booking not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to fetch booking summary",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("USER"),
+    ],
+  }),
+
+  getBookingSummaryController as any,
+);
+
