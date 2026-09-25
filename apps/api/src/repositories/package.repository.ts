@@ -1,6 +1,6 @@
 import type { MasterTrek } from "@mono/database";
 import { uuidv7 } from "uuidv7";
-import type { CreatePackageInput } from "../types/package.js";
+import type { CreatePackageInput, UpdatePackageBasicsInput } from "../types/package.js";
 import { prisma } from "../utils/prisma.js";
 
 export const createPackage = async (
@@ -113,6 +113,41 @@ export const getVendorActiveTeamsForPackageCreation = async (
               },
             },
           },
+        },
+      },
+    },
+  });
+};
+
+
+export const findPackageById = async (
+  packageId: string,
+) => {
+  return prisma.package.findUnique({
+    where: {
+      id: packageId,
+    },
+  });
+};
+
+
+export const updatePackageBasics = async (
+  packageId: string,
+  data: UpdatePackageBasicsInput,
+) => {
+  return prisma.package.update({
+    where: {
+      id: packageId,
+    },
+
+    data,
+
+    include: {
+      location: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
         },
       },
     },

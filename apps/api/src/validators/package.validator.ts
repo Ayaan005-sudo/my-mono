@@ -17,3 +17,64 @@ export const CreatePackageSchema = z.object({
     }),
 });
 
+export const UpdatePackageBasicsSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title cannot be empty")
+    .optional()
+    .openapi({
+      example: "Kedarkantha Winter Trek",
+    }),
+
+  description: z
+    .string()
+    .optional()
+    .openapi({
+      example: "A scenic winter trek through the Himalayas.",
+    }),
+
+  locationId: z
+    .string()
+    .min(1, "Location ID cannot be empty")
+    .optional()
+    .openapi({
+      example: "STATE:5",
+    }),
+
+  difficulty: z
+  .nativeEnum(Difficulty)
+  .optional()
+  .openapi({
+    example: "MODERATE",
+  }),
+
+  durationDays: z
+    .coerce
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .openapi({
+      example: 6,
+    }),
+
+  distanceKm: z
+    .coerce
+    .number()
+    .positive()
+    .optional()
+    .openapi({
+      example: 20,
+    }),
+
+  galleryImages: z
+    .array(z.string().url())
+    .optional()
+    .openapi({
+      example: [
+        "https://example.com/kedarkantha-1.jpg",
+        "https://example.com/kedarkantha-2.jpg",
+      ],
+    }),
+});
+

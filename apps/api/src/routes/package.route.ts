@@ -4,8 +4,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { createPackage } from "../controllers/package.controller.js";
-import { CreatePackageSchema } from "../validators/package.validator.js";
+import { createPackage, updatePackageBasics } from "../controllers/package.controller.js";
+import { CreatePackageSchema, UpdatePackageBasicsSchema } from "../validators/package.validator.js";
 
 
 export const PackageRoutes = new OpenAPIHono();
@@ -117,3 +117,98 @@ PackageRoutes.openapi(
 );
 
 
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+    path: "/{id}/basics",
+
+    tags: ["Package"],
+
+    summary: "Update package basics",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z.string().openapi({
+          example: "019c1234-5678-7abc-9def-123456789abc",
+        }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdatePackageBasicsSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description: "Package basics updated successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid request body",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Forbidden - Vendor only",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Package or location not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Failed to update package basics",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  updatePackageBasics as any,
+);

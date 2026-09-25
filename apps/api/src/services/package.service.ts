@@ -2,12 +2,15 @@ import type { Difficulty } from "@mono/database";
 import {
   createPackage,
   findMasterTrekById,
+  findPackageById,
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
+  updatePackageBasics,
 } from "../repositories/package.repository.js";
-import type { CreatePackageInput, CreatePackageResponse } from "../types/package.js";
+import type { CreatePackageInput, CreatePackageResponse, UpdatePackageBasicsInput, UpdatePackageBasicsResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
+import { findLocationByIdRepo } from "../repositories/location.repository.js";
 
 export const createPackageService = async (
   userId: string,
@@ -134,5 +137,36 @@ export const createPackageService = async (
     data,
     masterTrek,
   );
+};
+
+
+export const updatePackageBasicsService = async (
+  userId: string,
+  packageId: string,
+  data: UpdatePackageBasicsInput,
+): Promise<UpdatePackageBasicsResponse> => {
+
+  const existingPackage = await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError("Package not found", 404);
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to update this package",
+      403,
+    );
+  }
+
+  if (data.locationId !== undefined) {
+    const location = await findLocationByIdRepo(data.locationId);
+
+    if (!location) {
+      throw new CustomError("Location not found", 404);
+    }
+  }
+
+  return updatePackageBasics(packageId, data);
 };
 
