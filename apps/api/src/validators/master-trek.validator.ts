@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { Difficulty } from "@mono/database";
 
 
 export const ActivityInputSchema = z.object({
@@ -88,12 +89,12 @@ export const TrekRouteInputSchema = z.object({
   }),
 
   difficulty: z
-    .enum(["EASY", "MEDIUM", "HARD"])
-    .optional()
-    .openapi({
-      example: "MEDIUM",
-    }),
-
+  .nativeEnum(Difficulty)
+  .optional()
+  .openapi({
+    example: Difficulty.MODERATE,
+  }),
+  
   elevationGain: z.number().optional().openapi({
     example: 1200,
   }),
@@ -223,10 +224,11 @@ export const CreateMasterTrekSchema = z.object({
   }),
 
   difficulty: z
-    .enum(["EASY", "MEDIUM", "HARD"])
-    .openapi({
-      example: "MEDIUM",
-    }),
+  .nativeEnum(Difficulty)
+  .optional()
+  .openapi({
+    example: Difficulty.MODERATE,
+  }),
 
   durationDays: z.number().int().positive().openapi({
     example: 6,
@@ -354,7 +356,7 @@ export const CreateMasterTrekSchema = z.object({
           description:
             "Most commonly used route for this trek.",
           distanceKm: 20,
-          difficulty: "MEDIUM",
+          difficulty: Difficulty.MODERATE,
           elevationGain: 1200,
           ascentTime: "7 hours",
           descentTime: "5 hours",
