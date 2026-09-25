@@ -646,3 +646,18 @@ export const LocationIdParamSchema = z.object({
     example: "STATE:5",
   }),
 });
+
+
+export const UpcomingDeparturesQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .optional()
+    .default(8)
+    .openapi({
+      example: 8,
+    }),
+});
+

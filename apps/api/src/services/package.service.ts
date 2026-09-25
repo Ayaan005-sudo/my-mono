@@ -23,6 +23,7 @@ import {
   findPublicPackageDetail,
   findPublicPackagesByLocationIds,
   findRouteForMasterTrek,
+  findUpcomingDepartures,
   findVendorPackages,
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
@@ -1597,4 +1598,59 @@ export const getPackagesByLocationService = async (
       totalPages: Math.ceil(total / limit),
     },
   };
+};
+
+
+export const getUpcomingDeparturesService = async (
+  limit: number,
+) => {
+  const schedules =
+    await findUpcomingDepartures(limit);
+
+  return schedules.map((schedule) => ({
+    scheduleId: schedule.id,
+
+    packageId: schedule.package.id,
+
+    masterTrekId:
+      schedule.package.masterTrek.id,
+
+    title:
+      schedule.package.title ??
+      schedule.package.masterTrek.name,
+
+    image:
+      schedule.package.galleryImages[0] ??
+      schedule.package.masterTrek.coverImageUrl ??
+      null,
+
+    location: schedule.package.location,
+
+    difficulty:
+      schedule.package.difficulty,
+
+    durationDays:
+      schedule.package.durationDays,
+
+    startDate: schedule.startDate,
+    endDate: schedule.endDate,
+
+   price: schedule.price,
+adultPrice: schedule.adultPrice,
+childPrice: schedule.childPrice,
+currency: schedule.currency,
+
+    availableSeats:
+      schedule.availableSeats,
+
+    maxParticipants:
+      schedule.maxParticipants,
+
+    trekLeader: {
+      id: schedule.package.createdBy.id,
+      name: schedule.package.createdBy.name,
+      avatarUrl:
+        schedule.package.createdBy.avatarUrl,
+    },
+  }));
 };

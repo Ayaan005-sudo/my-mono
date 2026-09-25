@@ -1,8 +1,8 @@
 import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
-import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
-import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageItineraryService, getPackageRoutesService, getPackagesByLocationService, getPackageSchedulesService, getPublicPackageDetailService, openPackageScheduleService, publishPackageService, searchPublicPackagesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
+import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpcomingDeparturesQuery, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
+import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageItineraryService, getPackageRoutesService, getPackagesByLocationService, getPackageSchedulesService, getPublicPackageDetailService, getUpcomingDeparturesService, openPackageScheduleService, publishPackageService, searchPublicPackagesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
 import { GetMyActivitiesQuerySchema, LocationPackagesQuerySchema, SearchPackagesQuerySchema } from "../validators/package.validator.js";
 
@@ -1189,6 +1189,48 @@ export const getPackagesByLocationController = async (
 
     return ApiResponse.error(
       "Failed to fetch packages",
+      500,
+    ).send(c);
+  }
+};
+
+export const getUpcomingDeparturesController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const query =
+      c.req.valid("query" as never) as UpcomingDeparturesQuery;
+
+    const result =
+      await getUpcomingDeparturesService(
+        query.limit,
+      );
+
+    logger.info(
+      { limit: query.limit },
+      "Upcoming departures fetched successfully",
+    );
+
+    return ApiResponse.success(
+      "Upcoming departures fetched successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to fetch upcoming departures",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to fetch upcoming departures",
       500,
     ).send(c);
   }

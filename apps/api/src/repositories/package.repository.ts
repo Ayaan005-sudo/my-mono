@@ -1406,3 +1406,78 @@ export const findLocationAndDescendantIds = async (
 
   return locationIds;
 };
+
+
+export const findUpcomingDepartures = async (
+  limit: number,
+) => {
+  return prisma.packageSchedule.findMany({
+    where: {
+      status: "OPEN",
+
+      startDate: {
+        gte: new Date(),
+      },
+
+      availableSeats: {
+        gt: 0,
+      },
+
+      package: {
+        status: "PUBLISHED",
+        visibility: "PUBLIC",
+      },
+    },
+
+    orderBy: {
+      startDate: "asc",
+    },
+
+    take: limit,
+
+    select: {
+      id: true,
+      startDate: true,
+      endDate: true,
+      price: true,
+adultPrice: true,
+childPrice: true,
+currency: true,
+      availableSeats: true,
+      maxParticipants: true,
+
+      package: {
+        select: {
+          id: true,
+          title: true,
+          galleryImages: true,
+          difficulty: true,
+          durationDays: true,
+
+          location: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              avatarUrl: true,
+            },
+          },
+
+          masterTrek: {
+            select: {
+              id: true,
+              name: true,
+              coverImageUrl: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
