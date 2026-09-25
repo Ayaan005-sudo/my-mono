@@ -1,6 +1,8 @@
 import type { Difficulty } from "@mono/database";
 import {
   addPackageItineraryDay,
+  bulkCancelPackageSchedules,
+  cancelPackageSchedule,
   countPackageItineraryDays,
   createPackage,
   createPackageItinerary,
@@ -14,6 +16,7 @@ import {
   findPackageItineraryDayByNumber,
   findPackageScheduleById,
   findPackageSchedules,
+  findPackageSchedulesByIds,
   findRouteForMasterTrek,
   getVendorActiveTeamsForPackageCreation,
   getVendorPackageCreationProfile,
@@ -23,7 +26,7 @@ import {
   updatePackageSchedule,
   updatePackageScheduleType,
 } from "../repositories/package.repository.js";
-import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, PackageScheduleDisplayStatus, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
+import type { AddPackageItineraryDayInput, AddPackageItineraryDayResponse, BulkCancelPackageSchedulesInput, BulkCancelPackageSchedulesResponse, CancelPackageScheduleInput, CancelPackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageItineraryResponse, CreatePackageResponse, CreatePackageScheduleInput, CreatePackageScheduleResponse, DeletePackageItineraryDayResponse, GetPackageItineraryResponse, GetPackageRoutesResponse, GetPackageSchedulesResponse, PackageScheduleDisplayStatus, UpdatePackageBasicsInput, UpdatePackageBasicsResponse, UpdatePackageInclusionsInput, UpdatePackageInclusionsResponse, UpdatePackageItineraryDayInput, UpdatePackageItineraryDayResponse, UpdatePackageScheduleInput, UpdatePackageScheduleResponse, UpdatePackageScheduleTypeInput, UpdatePackageScheduleTypeResponse } from "../types/package.js";
 import { CustomError } from "../utils/custom-error.js";
 import { DIFFICULTY_RANK, VENDOR_CAPABILITY } from "../utils/vendor-capability.js";
 import { findLocationByIdRepo } from "../repositories/location.repository.js";
@@ -853,3 +856,133 @@ export const updatePackageScheduleTypeService = async (
   );
 };
 
+export const cancelPackageScheduleService = async (
+  userId: string,
+  packageId: string,
+  scheduleId: string,
+  input: CancelPackageScheduleInput,
+): Promise<CancelPackageScheduleResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to manage this package",
+      403,
+    );
+  }
+
+  const existingSchedule =
+    await findPackageScheduleById(scheduleId);
+
+  if (
+    !existingSchedule ||
+    existingSchedule.packageId !== packageId
+  ) {
+    throw new CustomError(
+      "Package schedule not found",
+      404,
+    );
+  }
+
+  if (existingSchedule.status === "CANCELLED") {
+    throw new CustomError(
+      "Package schedule is already cancelled",
+      409,
+    );
+  }
+
+  if (existingSchedule.status === "COMPLETED") {
+    throw new CustomError(
+      "Completed schedule cannot be cancelled",
+      400,
+    );
+  }
+
+  return cancelPackageSchedule(
+    scheduleId,
+    input.cancellationReason,
+  );
+};
+
+export const bulkCancelPackageSchedulesService = async (
+  userId: string,
+  packageId: string,
+  input: BulkCancelPackageSchedulesInput,
+): Promise<BulkCancelPackageSchedulesResponse> => {
+  const existingPackage =
+    await findPackageById(packageId);
+
+  if (!existingPackage) {
+    throw new CustomError(
+      "Package not found",
+      404,
+    );
+  }
+
+  if (existingPackage.createdByUserId !== userId) {
+    throw new CustomError(
+      "You are not authorized to manage this package",
+      403,
+    );
+  }
+
+  const uniqueScheduleIds = [
+    ...new Set(input.scheduleIds),
+  ];
+
+  const schedules =
+    await findPackageSchedulesByIds(
+      packageId,
+      uniqueScheduleIds,
+    );
+
+  if (schedules.length !== uniqueScheduleIds.length) {
+    throw new CustomError(
+      "One or more package schedules were not found",
+      404,
+    );
+  }
+
+  const alreadyCancelled = schedules.some(
+    (schedule) =>
+      schedule.status === "CANCELLED",
+  );
+
+  if (alreadyCancelled) {
+    throw new CustomError(
+      "One or more schedules are already cancelled",
+      409,
+    );
+  }
+
+  const completedSchedule = schedules.some(
+    (schedule) =>
+      schedule.status === "COMPLETED",
+  );
+
+  if (completedSchedule) {
+    throw new CustomError(
+      "Completed schedules cannot be cancelled",
+      400,
+    );
+  }
+
+  const result =
+    await bulkCancelPackageSchedules(
+      packageId,
+      uniqueScheduleIds,
+      input.cancellationReason,
+    );
+
+  return {
+    cancelledCount: result.count,
+  };
+};

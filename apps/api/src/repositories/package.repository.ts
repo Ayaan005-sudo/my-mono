@@ -707,3 +707,65 @@ export const updatePackageScheduleType = async (
     },
   });
 };
+
+
+export const cancelPackageSchedule = async (
+  scheduleId: string,
+  cancellationReason: string,
+) => {
+  return prisma.packageSchedule.update({
+    where: {
+      id: scheduleId,
+    },
+
+    data: {
+      status: "CANCELLED",
+      cancelledAt: new Date(),
+      cancellationReason,
+    },
+
+    select: {
+      id: true,
+      packageId: true,
+      status: true,
+      cancelledAt: true,
+      cancellationReason: true,
+      updatedAt: true,
+    },
+  });
+};
+
+export const findPackageSchedulesByIds = async (
+  packageId: string,
+  scheduleIds: string[],
+) => {
+  return prisma.packageSchedule.findMany({
+    where: {
+      packageId,
+      id: {
+        in: scheduleIds,
+      },
+    },
+  });
+};
+
+export const bulkCancelPackageSchedules = async (
+  packageId: string,
+  scheduleIds: string[],
+  cancellationReason: string,
+) => {
+  return prisma.packageSchedule.updateMany({
+    where: {
+      packageId,
+      id: {
+        in: scheduleIds,
+      },
+    },
+
+    data: {
+      status: "CANCELLED",
+      cancelledAt: new Date(),
+      cancellationReason,
+    },
+  });
+};

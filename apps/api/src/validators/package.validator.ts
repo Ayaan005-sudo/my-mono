@@ -422,3 +422,36 @@ export const UpdatePackageScheduleTypeSchema = z.object({
     example: "FIXED",
   }),
 });
+
+
+export const CancelPackageScheduleSchema = z.object({
+  cancellationReason: z
+    .string()
+    .min(1, "Cancellation reason is required")
+    .openapi({
+      example:
+        "Trek cancelled due to bad weather conditions.",
+    }),
+});
+
+export const BulkCancelPackageSchedulesSchema = z.object({
+  scheduleIds: z
+    .array(z.string().min(1))
+    .min(1, "At least one schedule ID is required")
+    .openapi({
+      example: [
+        "01a0b469-20fb-795b-98ca-89e931968a13",
+        "01a0b469-20fb-795b-98ca-89e931968a14",
+      ],
+    }),
+
+  cancellationReason: z
+    .string()
+    .min(1, "Cancellation reason is required")
+    .openapi({
+      example:
+        "Schedules cancelled due to bad weather conditions.",
+    }),
+});
+
+

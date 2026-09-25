@@ -4,8 +4,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { addPackageItineraryDayController, createPackage, createPackageItineraryController, createPackageScheduleController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, getPackageSchedulesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
-import { CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetPackageRoutesParamsSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
+import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deletePackageItineraryDayController, getPackageItinerary, getPackageRoutes, getPackageSchedulesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
+import { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetPackageRoutesParamsSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 
 
 export const PackageRoutes = new OpenAPIHono();
@@ -1129,6 +1129,353 @@ PackageRoutes.openapi(
   getPackageSchedulesController as any,
 );
 
+
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{id}/schedule-type",
+
+    tags: ["Package"],
+
+    summary: "Update package schedule type",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z
+          .string()
+          .min(1, "Package ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a12",
+          }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema: UpdatePackageScheduleTypeSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package schedule type updated successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Invalid schedule type",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only update own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Package not found",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to update package schedule type",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  updatePackageScheduleTypeController as any,
+);
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{id}/schedules/{scheduleId}/cancel",
+
+    tags: ["Package"],
+
+    summary: "Cancel package schedule",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z
+          .string()
+          .min(1, "Package ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a12",
+          }),
+
+        scheduleId: z
+          .string()
+          .min(1, "Schedule ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a13",
+          }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema: CancelPackageScheduleSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package schedule cancelled successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Invalid request or schedule cannot be cancelled",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only manage own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package or schedule not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package schedule is already cancelled",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to cancel package schedule",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  cancelPackageScheduleController as any,
+);
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{id}/schedules/bulk-cancel",
+
+    tags: ["Package"],
+
+    summary: "Bulk cancel package schedules",
+
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+
+    request: {
+      params: z.object({
+        id: z
+          .string()
+          .min(1, "Package ID is required")
+          .openapi({
+            example:
+              "01a0b469-20fb-795b-98ca-89e931968a12",
+          }),
+      }),
+
+      body: {
+        content: {
+          "application/json": {
+            schema:
+              BulkCancelPackageSchedulesSchema,
+          },
+        },
+      },
+    },
+
+    responses: {
+      200: {
+        content: {
+          "application/json": {
+            schema: SuccessSchema,
+          },
+        },
+        description:
+          "Package schedules cancelled successfully",
+      },
+
+      400: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Invalid request or completed schedule cannot be cancelled",
+      },
+
+      401: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description: "Unauthorized",
+      },
+
+      403: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Forbidden - Vendor can only manage own package",
+      },
+
+      404: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Package or one or more schedules not found",
+      },
+
+      409: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "One or more schedules are already cancelled",
+      },
+
+      500: {
+        content: {
+          "application/json": {
+            schema: ErrorSchema,
+          },
+        },
+        description:
+          "Failed to cancel package schedules",
+      },
+    },
+
+    middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  bulkCancelPackageSchedulesController as any,
+);
+
 PackageRoutes.openapi(
   createRoute({
     method: "patch",
@@ -1240,108 +1587,4 @@ PackageRoutes.openapi(
   }),
 
   updatePackageScheduleController as any,
-);
-
-PackageRoutes.openapi(
-  createRoute({
-    method: "patch",
-
-    path: "/{id}/schedule-type",
-
-    tags: ["Package"],
-
-    summary: "Update package schedule type",
-
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
-
-    request: {
-      params: z.object({
-        id: z
-          .string()
-          .min(1, "Package ID is required")
-          .openapi({
-            example:
-              "01a0b469-20fb-795b-98ca-89e931968a12",
-          }),
-      }),
-
-      body: {
-        content: {
-          "application/json": {
-            schema: UpdatePackageScheduleTypeSchema,
-          },
-        },
-      },
-    },
-
-    responses: {
-      200: {
-        content: {
-          "application/json": {
-            schema: SuccessSchema,
-          },
-        },
-        description:
-          "Package schedule type updated successfully",
-      },
-
-      400: {
-        content: {
-          "application/json": {
-            schema: ErrorSchema,
-          },
-        },
-        description: "Invalid schedule type",
-      },
-
-      401: {
-        content: {
-          "application/json": {
-            schema: ErrorSchema,
-          },
-        },
-        description: "Unauthorized",
-      },
-
-      403: {
-        content: {
-          "application/json": {
-            schema: ErrorSchema,
-          },
-        },
-        description:
-          "Forbidden - Vendor can only update own package",
-      },
-
-      404: {
-        content: {
-          "application/json": {
-            schema: ErrorSchema,
-          },
-        },
-        description: "Package not found",
-      },
-
-      500: {
-        content: {
-          "application/json": {
-            schema: ErrorSchema,
-          },
-        },
-        description:
-          "Failed to update package schedule type",
-      },
-    },
-
-    middleware: [
-      authMiddleware,
-      requireRole("VENDOR"),
-    ],
-  }),
-
-  updatePackageScheduleTypeController as any,
 );

@@ -1,8 +1,8 @@
 import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
-import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
-import { addPackageItineraryDayService, createPackageItineraryService, createPackageScheduleService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
+import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
+import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deletePackageItineraryDayService, getPackageItineraryService, getPackageRoutesService, getPackageSchedulesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
 
 export const createPackage = async (
@@ -720,6 +720,124 @@ export const updatePackageScheduleTypeController = async (
 
     return ApiResponse.error(
       "Failed to update package schedule type",
+      500,
+    ).send(c);
+  }
+};
+
+
+export const cancelPackageScheduleController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+    const scheduleId = c.req.param("scheduleId");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    if (!scheduleId) {
+      return ApiResponse.error(
+        "Schedule ID is required",
+        400,
+      ).send(c);
+    }
+
+    const body =
+      await c.req.json<CancelPackageScheduleInput>();
+
+    const result =
+      await cancelPackageScheduleService(
+        userId,
+        packageId,
+        scheduleId,
+        body,
+      );
+
+    logger.info(
+      { userId, packageId, scheduleId },
+      "Package schedule cancelled successfully",
+    );
+
+    return ApiResponse.success(
+      "Package schedule cancelled successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to cancel package schedule",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to cancel package schedule",
+      500,
+    ).send(c);
+  }
+};
+
+export const bulkCancelPackageSchedulesController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("id");
+
+    if (!packageId) {
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    const body =
+      await c.req.json<BulkCancelPackageSchedulesInput>();
+
+    const result =
+      await bulkCancelPackageSchedulesService(
+        userId,
+        packageId,
+        body,
+      );
+
+    logger.info(
+      { userId, packageId },
+      "Package schedules cancelled successfully",
+    );
+
+    return ApiResponse.success(
+      "Package schedules cancelled successfully",
+      result,
+      200,
+    ).send(c);
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to cancel package schedules",
+    );
+
+    if (error instanceof CustomError) {
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    return ApiResponse.error(
+      "Failed to cancel package schedules",
       500,
     ).send(c);
   }

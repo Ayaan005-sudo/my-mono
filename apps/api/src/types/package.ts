@@ -1,5 +1,5 @@
 import type { DepositType, Difficulty, PackageStatus, ScheduleStatus, ScheduleType } from "@mono/database";
-import type { CreatePackageItinerarySchema, CreatePackageScheduleSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
+import type { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, PackageItineraryDaySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 import z from "zod";
 
 export type CreatePackageInput = {
@@ -324,4 +324,23 @@ export type UpdatePackageScheduleTypeResponse = {
   id: string;
   scheduleType: ScheduleType;
   updatedAt: Date;
+};
+
+export type CancelPackageScheduleInput =
+  z.infer<typeof CancelPackageScheduleSchema>;
+
+export type CancelPackageScheduleResponse = {
+  id: string;
+  packageId: string;
+  status: ScheduleStatus;
+  cancelledAt: Date | null;
+  cancellationReason: string | null;
+  updatedAt: Date;
+};
+
+export type BulkCancelPackageSchedulesInput =
+  z.infer<typeof BulkCancelPackageSchedulesSchema>;
+
+export type BulkCancelPackageSchedulesResponse = {
+  cancelledCount: number;
 };
