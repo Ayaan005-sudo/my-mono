@@ -7,3 +7,4 @@ export * from "./team.js";
 export * from "./package.js";
 export * from "./booking.js";
 export * from "./payment.js";
+export * from "./review.js";
