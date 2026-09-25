@@ -2,7 +2,7 @@ import { logger } from "../utils/logger.js";
 import { CustomError } from "../utils/custom-error.js";
 import type { Context } from "hono";
 import type { AddPackageItineraryDayInput, BulkCancelPackageSchedulesInput, CancelPackageScheduleInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, UpcomingDeparturesQuery, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput, UpdatePackageScheduleTypeInput } from "../types/index.js";
-import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageCreationContextsService, getPackageItineraryService, getPackageRoutesService, getPackagesByLocationService, getPackageSchedulesService, getPublicPackageDetailService, getUpcomingDeparturesService, openPackageScheduleService, publishPackageService, searchPublicPackagesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
+import { addPackageItineraryDayService, bulkCancelPackageSchedulesService, cancelPackageScheduleService, completePackageScheduleService, createPackageItineraryService, createPackageScheduleService, createPackageService, deactivatePackageService, deletePackageItineraryDayService, getMyActivitiesService, getPackageCreationContextsService, getPackageItineraryService, getPackageRoutesService, getPackagesByLocationService, getPackageSchedulesService, getPublicPackageDetailService, getUpcomingDeparturesService, openPackageScheduleService, publishPackageService, searchPublicPackagesService, updatePackageBasicsService, updatePackageInclusionsService, updatePackageItineraryDayService, updatePackageScheduleService, updatePackageScheduleTypeService } from "../services/package.service.js";
 import ApiResponse from "../utils/api-response.js";
 import { GetMyActivitiesQuerySchema, LocationPackagesQuerySchema, SearchPackagesQuerySchema } from "../validators/package.validator.js";
 
@@ -1278,3 +1278,98 @@ export const getPackageCreationContextsController = async (
   }
 };
 
+
+export const completePackageScheduleController = async (
+  c: Context,
+): Promise<Response> => {
+  try {
+    const userId = c.get("userId");
+    const packageId = c.req.param("packageId");
+    const scheduleId = c.req.param("scheduleId");
+
+    if (!packageId) {
+      logger.warn(
+        {
+          userId,
+          scheduleId,
+        },
+        "Complete package schedule failed: package ID is required",
+      );
+
+      return ApiResponse.error(
+        "Package ID is required",
+        400,
+      ).send(c);
+    }
+
+    if (!scheduleId) {
+      logger.warn(
+        {
+          userId,
+          packageId,
+        },
+        "Complete package schedule failed: schedule ID is required",
+      );
+
+      return ApiResponse.error(
+        "Schedule ID is required",
+        400,
+      ).send(c);
+    }
+
+    const result =
+      await completePackageScheduleService(
+        userId,
+        packageId,
+        scheduleId,
+      );
+
+    logger.info(
+      {
+        userId,
+        packageId,
+        scheduleId,
+      },
+      "Package schedule completed successfully",
+    );
+
+    return ApiResponse.success(
+      "Package schedule completed successfully",
+      result,
+      200,
+    ).send(c);
+
+  } catch (error) {
+    if (error instanceof CustomError) {
+      logger.warn(
+        {
+          error,
+          userId: c.get("userId"),
+          packageId: c.req.param("packageId"),
+          scheduleId: c.req.param("scheduleId"),
+        },
+        "Package schedule completion failed",
+      );
+
+      return ApiResponse.error(
+        error.message,
+        error.statusCode,
+      ).send(c);
+    }
+
+    logger.error(
+      {
+        error,
+        userId: c.get("userId"),
+        packageId: c.req.param("packageId"),
+        scheduleId: c.req.param("scheduleId"),
+      },
+      "Failed to complete package schedule",
+    );
+
+    return ApiResponse.error(
+      "Failed to complete package schedule",
+      500,
+    ).send(c);
+  }
+};

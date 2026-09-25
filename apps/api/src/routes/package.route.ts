@@ -4,8 +4,8 @@ import {
   authMiddleware,
   requireRole,
 } from "../middlewares/auth.middleware.js";
-import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deactivatePackageController, deletePackageItineraryDayController, getMyActivitiesController, getPackageCreationContextsController, getPackageItinerary, getPackageRoutes, getPackagesByLocationController, getPackageSchedulesController, getPublicPackageDetailController, getUpcomingDeparturesController, openPackageScheduleController, publishPackageController, searchPublicPackagesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
-import { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetMyActivitiesQuerySchema, GetPackageRoutesParamsSchema, LocationIdParamSchema, LocationPackagesQuerySchema, PackageItineraryDaySchema, PublicPackageDetailParamSchema, SearchPackagesQuerySchema, UpcomingDeparturesQuerySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
+import { addPackageItineraryDayController, bulkCancelPackageSchedulesController, cancelPackageScheduleController, completePackageScheduleController, createPackage, createPackageItineraryController, createPackageScheduleController, deactivatePackageController, deletePackageItineraryDayController, getMyActivitiesController, getPackageCreationContextsController, getPackageItinerary, getPackageRoutes, getPackagesByLocationController, getPackageSchedulesController, getPublicPackageDetailController, getUpcomingDeparturesController, openPackageScheduleController, publishPackageController, searchPublicPackagesController, updatePackageBasics, updatePackageInclusionsController, updatePackageItineraryDayController, updatePackageScheduleController, updatePackageScheduleTypeController } from "../controllers/package.controller.js";
+import { BulkCancelPackageSchedulesSchema, CancelPackageScheduleSchema, CompletePackageScheduleParamsSchema, CreatePackageItinerarySchema, CreatePackageScheduleSchema, CreatePackageSchema, DeletePackageItineraryDayParamsSchema, GetMyActivitiesQuerySchema, GetPackageRoutesParamsSchema, LocationIdParamSchema, LocationPackagesQuerySchema, PackageItineraryDaySchema, PublicPackageDetailParamSchema, SearchPackagesQuerySchema, UpcomingDeparturesQuerySchema, UpdatePackageBasicsSchema, UpdatePackageInclusionsSchema, UpdatePackageItineraryDaySchema, UpdatePackageScheduleSchema, UpdatePackageScheduleTypeSchema } from "../validators/package.validator.js";
 
 
 export const PackageRoutes = new OpenAPIHono();
@@ -1706,6 +1706,58 @@ PackageRoutes.openapi(
 
   openPackageScheduleController as any,
 );
+
+PackageRoutes.openapi(
+  createRoute({
+    method: "patch",
+
+    path: "/{packageId}/schedules/{scheduleId}/complete",
+
+    tags: ["Package"],
+    summary: "Complete package schedule",
+
+    security: [{ bearerAuth: [] }],
+
+    request: {
+      params: CompletePackageScheduleParamsSchema,
+    },
+
+    responses: {
+      200: {
+        content: { "application/json": { schema: SuccessSchema } },
+        description: "Package schedule completed successfully",
+      },
+      400: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Schedule cannot be completed",
+      },
+      401: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Unauthorized",
+      },
+      403: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Not authorized to complete this trek",
+      },
+      404: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Package schedule not found",
+      },
+      500: {
+        content: { "application/json": { schema: ErrorSchema } },
+        description: "Failed to complete package schedule",
+      },
+    },
+
+     middleware: [
+      authMiddleware,
+      requireRole("VENDOR"),
+    ],
+  }),
+
+  completePackageScheduleController as any,
+);
+
 
 
 PackageRoutes.openapi(

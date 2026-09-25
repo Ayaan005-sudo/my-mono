@@ -587,3 +587,17 @@ export type TeamPackageCreationContext = {
 export type PackageCreationContext =
   | IndividualPackageCreationContext
   | TeamPackageCreationContext;
+  
+
+  export type CompletePackageScheduleResponse = {
+  schedule: {
+    id: string;
+    packageId: string;
+    status: "COMPLETED";
+    startDate: Date;
+    endDate: Date;
+    updatedAt: Date;
+  };
+  completedBookings: number;
+  alreadyCompleted: boolean;
+};

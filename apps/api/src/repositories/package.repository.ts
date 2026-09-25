@@ -1,6 +1,6 @@
 import type { MasterTrek, ScheduleType } from "@mono/database";
 import { uuidv7 } from "uuidv7";
-import type { AddPackageItineraryDayInput, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, GetMyActivitiesQuery, SearchPackagesQuery, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput } from "../types/package.js";
+import type { AddPackageItineraryDayInput, CompletePackageScheduleResponse, CreatePackageInput, CreatePackageItineraryInput, CreatePackageScheduleInput, GetMyActivitiesQuery, SearchPackagesQuery, UpdatePackageBasicsInput, UpdatePackageInclusionsInput, UpdatePackageItineraryDayInput, UpdatePackageScheduleInput } from "../types/package.js";
 import { prisma } from "../utils/prisma.js";
 
 export const createPackage = async (
@@ -1483,3 +1483,197 @@ currency: true,
 };
 
 
+
+export const completePackageScheduleAndBookings = async (
+  packageId: string,
+  scheduleId: string,
+): Promise<
+  CompletePackageScheduleResponse["schedule"] & {
+    completedBookings: number;
+  }
+> => {
+  return prisma.$transaction(async (tx) => {
+  
+    const packageData = await tx.package.findUnique({
+      where: {
+        id: packageId,
+      },
+
+      select: {
+        id: true,
+        createdByUserId: true,
+        teamId: true,
+
+        title: true,
+        difficulty: true,
+        durationDays: true,
+        galleryImages: true,
+
+        masterTrek: {
+          select: {
+            maxAltitude: true,
+          },
+        },
+      },
+    });
+
+    if (!packageData) {
+      throw new Error("PACKAGE_NOT_FOUND");
+    }
+
+    // Complete the schedule
+    const schedule = await tx.packageSchedule.update({
+      where: {
+        id: scheduleId,
+      },
+
+      data: {
+        status: "COMPLETED",
+      },
+
+      select: {
+        id: true,
+        packageId: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        updatedAt: true,
+      },
+    });
+
+    
+    const bookings = await tx.packageBooking.updateMany({
+      where: {
+        scheduleId,
+        status: "CONFIRMED",
+      },
+
+      data: {
+        status: "COMPLETED",
+      },
+    });
+
+    if (!packageData.title) {
+  throw new Error("PACKAGE_TITLE_REQUIRED");
+}
+
+    
+    if (packageData.teamId) {
+      await tx.teamExperience.create({
+        data: {
+          id: uuidv7(),
+
+          teamId: packageData.teamId,
+          packageId: packageData.id,
+          scheduleId: schedule.id,
+
+          trekName: packageData.title,
+          difficulty: packageData.difficulty,
+          completedAt: schedule.endDate,
+          duration: packageData.durationDays,
+          altitude:
+            packageData.masterTrek?.maxAltitude ?? null,
+
+          imageUrls:
+            packageData.galleryImages ?? [],
+        },
+      });
+    } else {
+      
+      const existingExperience =
+        await tx.userExperience.findFirst({
+          where: {
+            scheduleId: schedule.id,
+          },
+
+          select: {
+            id: true,
+          },
+        });
+
+      if (!existingExperience) {
+        await tx.userExperience.create({
+          data: {
+            id: uuidv7(),
+
+            userId:
+              packageData.createdByUserId,
+
+             description: `Completed ${packageData.title} trek through the platform.`,
+
+            trekName:
+              packageData.title,
+
+            difficulty:
+              packageData.difficulty,
+
+            roleDuringTrek:
+              "TREK_LEADER",
+
+            completedAt:
+              schedule.endDate,
+
+            duration:
+              packageData.durationDays,
+
+            altitude:
+              packageData.masterTrek?.maxAltitude ??
+              null,
+
+            proofUrl: null,
+
+            verificationStatus:
+              "APPROVED",
+
+            source:
+              "PLATFORM",
+
+            packageId:
+              packageData.id,
+
+            scheduleId:
+              schedule.id,
+          },
+        });
+      }
+    }
+
+    return {
+      id: schedule.id,
+      packageId: schedule.packageId,
+      status: "COMPLETED",
+      startDate: schedule.startDate,
+      endDate: schedule.endDate,
+      updatedAt: schedule.updatedAt,
+      completedBookings: bookings.count,
+    };
+  });
+};
+
+
+
+export const findPackageScheduleForCompletion = async (
+  packageId: string,
+  scheduleId: string,
+) => {
+  return prisma.packageSchedule.findFirst({
+    where: {
+      id: scheduleId,
+      packageId,
+    },
+    select: {
+      id: true,
+      packageId: true,
+      startDate: true,
+      endDate: true,
+      status: true,
+      updatedAt: true,
+      package: {
+        select: {
+          createdByUserId: true,
+          teamId: true,
+        },
+      },
+    },
+  });
+};

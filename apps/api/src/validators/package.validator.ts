@@ -661,3 +661,13 @@ export const UpcomingDeparturesQuerySchema = z.object({
     }),
 });
 
+
+export const CompletePackageScheduleParamsSchema = z.object({
+  packageId: z.string().min(1, "Package ID is required").openapi({
+    example: "01a0b469-20fb-795b-98ca-89e931968a12",
+  }),
+  scheduleId: z.string().min(1, "Schedule ID is required").openapi({
+    example: "01a0b469-20fb-795b-98ca-89e931968a13",
+  }),
+});
+
