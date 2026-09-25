@@ -8,6 +8,7 @@ import { MasterTrekRoutes } from "./routes/master-trek.route.js";
 import { onboardingRoutes } from "./routes/onboarding.route.js";
 import { adminVendorRoutes } from "./routes/admin-vendor.route.js";
 import { teamRoutes } from "./routes/team.route.js";
+import { PackageRoutes } from "./routes/package.route.js";
 
 const app = new OpenAPIHono();
 
@@ -48,6 +49,7 @@ app.route("/api/master-trek", MasterTrekRoutes);
 app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/admin", adminVendorRoutes);
 app.route("/api/team", teamRoutes);
+app.route("/api/package",PackageRoutes);
 
 // Basic route
 app.get("/", (c) => {
