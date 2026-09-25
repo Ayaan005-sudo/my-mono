@@ -1,5 +1,5 @@
-import { findVendorPublicProfileById } from "../repositories/vendor.repository.js";
-import type { VendorPublicProfileResponse } from "../types/index.js";
+import { findVendorPublicProfileById, getVendorDashboardData } from "../repositories/vendor.repository.js";
+import type { VendorDashboardResponse, VendorPublicProfileResponse } from "../types/index.js";
 import { CustomError } from "../utils/custom-error.js";
 
 
@@ -17,4 +17,70 @@ export const getVendorPublicProfileService = async (
 	}
 
 	return vendor;
+};
+
+
+export const getVendorDashboardService = async (
+	userId: string,
+): Promise<VendorDashboardResponse> => {
+	const now = new Date();
+	const data = await getVendorDashboardData(userId, now);
+	const monthStart = new Date(
+		Date.UTC(
+			now.getUTCFullYear(),
+			now.getUTCMonth() - 5,
+			1,
+		),
+	);
+
+	const periods = Array.from({ length: 6 }, (_, index) => {
+		const date = new Date(monthStart);
+		date.setUTCMonth(monthStart.getUTCMonth() + index);
+		return date;
+	});
+
+	const revenueByPeriod = new Map<string, number>();
+	for (const payment of data.successfulPayments) {
+		if (!payment.paidAt || payment.paidAt < monthStart) {
+			continue;
+		}
+
+		const period = `${payment.paidAt.getUTCFullYear()}-${String(
+			payment.paidAt.getUTCMonth() + 1,
+		).padStart(2, "0")}`;
+		revenueByPeriod.set(
+			period,
+			(revenueByPeriod.get(period) ?? 0) +
+				payment.amount,
+		);
+	}
+
+	const revenueTrend = periods.map((period) => {
+		const key = `${period.getUTCFullYear()}-${String(
+			period.getUTCMonth() + 1,
+		).padStart(2, "0")}`;
+		return {
+			period: key,
+			revenue: revenueByPeriod.get(key) ?? 0,
+		};
+	});
+
+	return {
+		stats: {
+			totalEarnings: data.successfulPayments.reduce(
+				(total, payment) => total + payment.amount,
+				0,
+			),
+			activeTreks: data.activeTreksCount,
+			pendingBookings: data.pendingBookingsCount,
+			totalTrekkers: data.confirmedBookingParticipants.reduce(
+				(total, booking) =>
+					total + booking.adultCount + booking.childCount,
+				0,
+			),
+		},
+		revenueTrend,
+		pendingBookings: data.pendingBookings,
+		activeTreks: data.activeTreks,
+	};
 };

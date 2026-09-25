@@ -66,3 +66,112 @@ export type VendorPublicProfileResponse = {
     description: string | null;
     galleryImages: string[];
   }[];}
+
+
+
+  export type VendorDashboardStats = {
+  totalEarnings: number;
+  activeTreks: number;
+  pendingBookings: number;
+  totalTrekkers: number;
+};
+
+export type VendorRevenueTrendItem = {
+  period: string;
+  revenue: number;
+};
+
+export type VendorPendingBookingItem = {
+  bookingId: string;
+  trekker: {
+    id: string;
+    name: string | null;
+    avatarUrl: string | null;
+  };
+  package: {
+    id: string;
+    title: string | null;
+  };
+  participantCount: number;
+  totalAmount: number;
+  currency: string;
+  bookingStatus: string;
+  bookedAt: Date;
+};
+
+export type VendorActiveTrekItem = {
+  scheduleId: string;
+  package: {
+    id: string;
+    title: string | null;
+    galleryImages: string[];
+  };
+  startDate: Date;
+  endDate: Date;
+  bookedSeats: number;
+  availableSeats: number;
+  maxParticipants: number;
+  status: string;
+};
+
+export type VendorDashboardResponse = {
+  stats: VendorDashboardStats;
+  revenueTrend: VendorRevenueTrendItem[];
+  pendingBookings: VendorPendingBookingItem[];
+  activeTreks: VendorActiveTrekItem[];
+};
+
+
+export type VendorBookingListItem = {
+  bookingId: string;
+  trekker: {
+    id: string;
+    name: string | null;
+    avatarUrl: string | null;
+  };
+  package: {
+    id: string;
+    title: string | null;
+  };
+  schedule: {
+    id: string;
+    startDate: Date;
+    endDate: Date;
+  };
+  adultCount: number;
+  childCount: number;
+  participantCount: number;
+  totalAmount: number;
+  currency: string;
+  status: string;
+  bookedAt: Date;
+};
+
+export type VendorBookingsSummary = {
+  totalBookings: number;
+  pendingBookings: number;
+  confirmedRevenue: number;
+  upcomingTreks: number;
+};
+
+export type VendorBookingsResponse = {
+  summary: VendorBookingsSummary;
+  bookings: VendorBookingListItem[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
+};
+
+export type VendorDashboardRepositoryData = {
+  successfulPayments: {
+    amount: number;
+    paidAt: Date | null;
+  }[];
+  confirmedBookingParticipants: {
+    adultCount: number;
+    childCount: number;
+  }[];
+  pendingBookingsCount: number;
+  activeTreksCount: number;
+  pendingBookings: VendorPendingBookingItem[];
+  activeTreks: VendorActiveTrekItem[];
+};

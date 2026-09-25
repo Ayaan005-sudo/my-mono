@@ -1,6 +1,7 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { getVendorPublicProfileController } from "../controllers/vendor.controller.js";
+import { getVendorDashboardController, getVendorPublicProfileController } from "../controllers/vendor.controller.js";
 import { VendorIdParamSchema } from "../validators/vendor.validator.js";
+import { authMiddleware, requireRole } from "../middlewares/auth.middleware.js";
 export const VendorRoutes = new OpenAPIHono();
 
 
@@ -61,4 +62,36 @@ VendorRoutes.openapi(
 		},
 	}),
 	getVendorPublicProfileController as any,
+);
+
+
+
+VendorRoutes.openapi(
+	createRoute({
+		method: "get",
+		path: "/dashboard",
+		tags: ["Vendor"],
+		summary: "Get vendor dashboard",
+		security: [{ bearerAuth: [] }],
+		responses: {
+			200: {
+				content: { "application/json": { schema: SuccessSchema } },
+				description: "Vendor dashboard fetched successfully",
+			},
+			401: {
+				content: { "application/json": { schema: ErrorSchema } },
+				description: "Unauthorized",
+			},
+			403: {
+				content: { "application/json": { schema: ErrorSchema } },
+				description: "Vendor role required",
+			},
+			500: {
+				content: { "application/json": { schema: ErrorSchema } },
+				description: "Failed to fetch vendor dashboard",
+			},
+		},
+		middleware: [authMiddleware, requireRole("VENDOR")],
+	}),
+	getVendorDashboardController as any,
 );
