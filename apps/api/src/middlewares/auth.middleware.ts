@@ -23,6 +23,7 @@ export const authMiddleware = async (
 
     c.set("userId", payload.id);
     c.set("sessionId", payload.sessionId);
+    c.set("role", payload.role);
 
     await next();
   } catch (error) {
