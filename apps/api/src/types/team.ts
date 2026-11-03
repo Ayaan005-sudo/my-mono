@@ -139,7 +139,7 @@ export type TeamDetailsResponse = {
   };
   _count: {
     members: number;
-    packages: number;
+    
   };
 };
 
@@ -158,46 +158,4 @@ export type UpdateTeamResponse = {
   createdByUserId: string;
   createdAt: Date;
   updatedAt: Date;
-};
-
-
-export type TeamPublicProfileResponse = {
-  id: string;
-  name: string;
-  description: string | null;
-  logoUrl: string | null;
-
-  city: string | null;
-  state: string | null;
-  country: string | null;
-
-  owner: {
-    id: string;
-    name: string | null;
-    avatarUrl: string | null;
-  };
-
-  members: {
-    id: string;
-    role: string;
-
-    user: {
-      id: string;
-      name: string | null;
-      avatarUrl: string | null;
-      city: string | null;
-      state: string | null;
-      country: string | null;
-    };
-  }[];
-
-
-  packages: {
-    id: string;
-    title: string | null;
-    description: string | null;
-    galleryImages: string[];
-  }[];
-
-  createdAt: Date;
 };
