@@ -98,7 +98,6 @@ enum VendorVerificationStatus {
   APPROVED
   REJECTED
 }
-
 enum TeamMemberRole {
   OWNER
   MEMBER
@@ -116,28 +115,6 @@ enum TeamInvitationStatus {
   REJECTED
   EXPIRED
 }
-
-enum ScheduleType {
-  FIXED
-  FLEXIBLE
-}
-
-enum DepositType {
-  PERCENTAGE
-  FIXED
-}
-
-enum PaymentType {
-  FULL
-  DEPOSIT
-  BALANCE
-}
-
-enum ExperienceSource {
-  SELF_SUBMITTED
-  PLATFORM
-}
-
 model User {
   id        String  @id @map("_id")
   googleId  String  @unique
@@ -171,10 +148,9 @@ model User {
   vendorProfile      VendorProfile?
 
   createdTeams        Team[]           @relation("TeamCreator")
-  teamMemberships     TeamMember[]
-  teamInvitations     TeamInvitation[] @relation("TeamInvitedUser")
-  sentTeamInvitations TeamInvitation[] @relation("TeamInviter")
-  reviews             Review[]
+teamMemberships     TeamMember[]
+teamInvitations     TeamInvitation[] @relation("TeamInvitedUser")
+sentTeamInvitations TeamInvitation[] @relation("TeamInviter")
 }
 
 model VendorProfile {
@@ -306,120 +282,8 @@ model Location {
   masterTreks  MasterTrek[]
   nearbyPlaces NearbyPlace[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  packages  Package[]
-}
-
-model Team {
-  id String @id @map("_id")
-
-  name        String
-  description String?
-  logoUrl     String?
-
-  createdByUserId String
-
-  city    String?
-  state   String?
-  country String?
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  createdBy User @relation("TeamCreator", fields: [createdByUserId], references: [id])
-
-  members     TeamMember[]
-  invitations TeamInvitation[]
-  packages    Package[]
-  experiences TeamExperience[]
-}
-
-model TeamExperience {
-  id String @id @map("_id")
-
-  teamId     String
-  packageId  String
-  scheduleId String @unique
-
-  trekName    String
-  difficulty  Difficulty?
-  completedAt DateTime
-  duration    Int?
-  altitude    Float?
-  imageUrls   String[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  team Team @relation(fields: [teamId], references: [id])
-}
-
-model TeamMember {
-  id String @id @map("_id")
-
-  teamId String
-  userId String
-
-  role   TeamMemberRole   @default(MEMBER)
-  status TeamMemberStatus @default(ACTIVE)
-
-  joinedAt  DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([teamId, userId])
-}
-
-model TeamInvitation {
-  id String @id @map("_id")
-
-  teamId String
-
-  invitedUserId String?
-  email         String
-
-  invitedByUserId String
-
-  status    TeamInvitationStatus @default(PENDING)
-  expiresAt DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  invitedUser User? @relation("TeamInvitedUser", fields: [invitedUserId], references: [id])
-
-  invitedBy User @relation("TeamInviter", fields: [invitedByUserId], references: [id])
-}
-
-model Review {
-  id String @id @map("_id")
-
-  userId    String
-  packageId String
-  bookingId String @unique
-
-  rating            Int
-  guideExpertise    Int
-  safetyProtocols   Int
-  logisticsAndCare  Int
-  sustainableImpact Int
-
-  title     String?
-  comment   String?
-  imageUrls String[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user    User           @relation(fields: [userId], references: [id])
-  package Package        @relation(fields: [packageId], references: [id])
-  booking PackageBooking @relation(fields: [bookingId], references: [id])
 }
 
 model MasterTrek {
@@ -633,7 +497,6 @@ model Package {
   team          Team?                 @relation(fields: [teamId], references: [id])
 
   location Location? @relation(fields: [locationId], references: [id])
-  reviews  Review[]
 }
 
 model PackageItineraryDay {
