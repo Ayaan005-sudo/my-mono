@@ -2,6 +2,9 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 
 import { authRoutes } from "./routes/auth.route.js";
+
+import { LocationRoutes } from "./routes/location.route.js";
+import { MasterTrekRoutes } from "./routes/master-trek.route.js";
 import { onboardingRoutes } from "./routes/onboarding.route.js";
 import { adminVendorRoutes } from "./routes/admin-vendor.route.js";
 import { teamRoutes } from "./routes/team.route.js";
@@ -40,6 +43,8 @@ app.get(
 
 // Routes
 app.route("/api/auth", authRoutes);
+app.route("/api/location", LocationRoutes);
+app.route("/api/master-trek", MasterTrekRoutes);
 app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/admin", adminVendorRoutes);
 app.route("/api/team", teamRoutes);

@@ -23,8 +23,9 @@ enum UserStatus {
 
 enum Difficulty {
   EASY
-  MEDIUM
-  HARD
+  MODERATE
+  DIFFICULT
+  PRO
 }
 
 enum TrekStatus {
@@ -66,6 +67,14 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   REFUNDED
+}
+
+enum LocationType {
+  COUNTRY
+  STATE
+  DISTRICT
+  SUBDISTRICT
+  URBAN_LOCAL_BODY
 }
 
 enum VendorType {
@@ -404,10 +413,8 @@ model Activity {
   itineraryDayIds String[]
   itineraryDays   TrekItineraryDay[] @relation(fields: [itineraryDayIds], references: [id])
 
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
-  packageItineraryDayIds String[]
-  packageItineraryDays   PackageItineraryDay[] @relation(fields: [packageItineraryDayIds], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model NearbyPlace {
@@ -445,29 +452,46 @@ model TrekNearbyPlace {
 model Package {
   id String @id @map("_id")
 
+  locationId String?
+  difficulty Difficulty?
+  distanceKm Float?
+
   createdByUserId String
+  teamId          String?
   masterTrekId    String
-  routeId         String
+  routeId         String?
 
-  title       String
-  description String?
-  visibility  PackageVisibility @default(PUBLIC)
-  status      PackageStatus     @default(DRAFT)
+  galleryImages String[]
 
-  minParticipants Int?
-  maxParticipants Int?
-  meetingPoint    String?
-  instructions    String?
+  scheduleType ScheduleType @default(FIXED)
+
+  inclusions  String[]
+  exclusions  String[]
+  packingList String[]
+
+  fitnessAndExperienceRequirement String?
+
+  title        String?
+  description  String?
+  visibility   PackageVisibility @default(PUBLIC)
+  status       PackageStatus     @default(DRAFT)
+  durationDays Int?
+
+  meetingPoint String?
+  instructions String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   createdBy  User       @relation(fields: [createdByUserId], references: [id])
   masterTrek MasterTrek @relation(fields: [masterTrekId], references: [id])
-  route      TrekRoute  @relation(fields: [routeId], references: [id])
+  route      TrekRoute? @relation(fields: [routeId], references: [id])
 
   itineraryDays PackageItineraryDay[]
   schedules     PackageSchedule[]
+  team          Team?                 @relation(fields: [teamId], references: [id])
+
+  location Location? @relation(fields: [locationId], references: [id])
 }
 
 model PackageItineraryDay {
@@ -484,8 +508,7 @@ model PackageItineraryDay {
   duration      String?
   altitude      Float?
 
-  activityIds String[]
-  activities  Activity[] @relation(fields: [activityIds], references: [id])
+  imageUrls String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -503,11 +526,11 @@ model PackageSchedule {
   bookingStartDate DateTime?
   bookingEndDate   DateTime?
 
-  price    Float
   currency String @default("INR")
 
-  capacity       Int
-  availableSeats Int
+  minParticipants Int
+  maxParticipants Int
+  availableSeats  Int
 
   status             ScheduleStatus @default(DRAFT)
   publishedAt        DateTime?
@@ -516,6 +539,19 @@ model PackageSchedule {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  price Float?
+
+  adultPrice Float?
+  childPrice Float?
+
+  allowPartialPayment Boolean @default(false)
+
+  depositType  DepositType?
+  depositValue Float?
+
+  balanceDueDaysBeforeStart Int?
+  cancellationPolicy        String?
 
   package  Package          @relation(fields: [packageId], references: [id], onDelete: Cascade)
   bookings PackageBooking[]
