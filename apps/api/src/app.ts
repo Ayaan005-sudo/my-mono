@@ -4,6 +4,7 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { authRoutes } from "./routes/auth.route.js";
 import { onboardingRoutes } from "./routes/onboarding.route.js";
 import { adminVendorRoutes } from "./routes/admin-vendor.route.js";
+import { teamRoutes } from "./routes/team.route.js";
 
 const app = new OpenAPIHono();
 
@@ -41,6 +42,7 @@ app.get(
 app.route("/api/auth", authRoutes);
 app.route("/api/onboarding", onboardingRoutes);
 app.route("/api/admin", adminVendorRoutes);
+app.route("/api/team", teamRoutes);
 
 
 // Basic route

@@ -89,7 +89,23 @@ enum VendorVerificationStatus {
   APPROVED
   REJECTED
 }
+enum TeamMemberRole {
+  OWNER
+  MEMBER
+}
 
+enum TeamMemberStatus {
+  ACTIVE
+  LEFT
+  REMOVED
+}
+
+enum TeamInvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
 model User {
   id        String  @id @map("_id")
   googleId  String  @unique
@@ -120,6 +136,11 @@ model User {
   packages           Package[]
   packageBookings    PackageBooking[]
   vendorProfile      VendorProfile?
+
+  createdTeams        Team[]           @relation("TeamCreator")
+teamMemberships     TeamMember[]
+teamInvitations     TeamInvitation[] @relation("TeamInvitedUser")
+sentTeamInvitations TeamInvitation[] @relation("TeamInviter")
 }
 
 model VendorProfile {
