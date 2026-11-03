@@ -251,68 +251,25 @@ model UserBadge {
   @@unique([userId, badgeId])
 }
 
-model Team {
-  id String @id @map("_id")
+model Location {
+  id   String       @id @map("_id")
+  name String
+  type LocationType
 
-  name        String
-  description String?
-  logoUrl     String?
+  sourceCode    String
+  localBodyType String?
 
-  createdByUserId String
+  parentId String?
 
-  city    String?
-  state   String?
-  country String?
+  parent Location? @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  children Location[] @relation("LocationHierarchy")
 
-  createdBy User @relation("TeamCreator", fields: [createdByUserId], references: [id])
-
-  members     TeamMember[]
-  invitations TeamInvitation[]
-}
-
-model TeamMember {
-  id String @id @map("_id")
-
-  teamId String
-  userId String
-
-  role   TeamMemberRole   @default(MEMBER)
-  status TeamMemberStatus @default(ACTIVE)
-
-  joinedAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([teamId, userId])
-}
-
-model TeamInvitation {
-  id String @id @map("_id")
-
-  teamId String
-
-  invitedUserId String?
-  email         String
-
-  invitedByUserId String
-
-  status    TeamInvitationStatus @default(PENDING)
-  expiresAt DateTime?
+  masterTreks  MasterTrek[]
+  nearbyPlaces NearbyPlace[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  invitedUser User? @relation("TeamInvitedUser", fields: [invitedUserId], references: [id])
-
-  invitedBy User @relation("TeamInviter", fields: [invitedByUserId], references: [id])
 }
 
 model MasterTrek {
@@ -330,11 +287,10 @@ model MasterTrek {
   distanceKm     Float?
   distinctRoutes Int        @default(1)
 
-  baseLocation String
-  state        String
-  country      String @default("India")
-  latitude     Float?
-  longitude    Float?
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+  latitude   Float?
+  longitude  Float?
 
   bestSeason       String?
   beginnerFriendly Boolean @default(false)
@@ -366,6 +322,21 @@ model MasterTrek {
   activities  Activity[] @relation(fields: [activityIds], references: [id])
 
   packages Package[]
+  faqs     MasterTrekFaq[]
+}
+
+model MasterTrekFaq {
+  id           String @id @map("_id")
+  masterTrekId String
+
+  question String
+  answer   String
+  order    Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  masterTrek MasterTrek @relation(fields: [masterTrekId], references: [id], onDelete: Cascade)
 }
 
 model TrekRoute {
@@ -410,6 +381,8 @@ model TrekItineraryDay {
   duration   String?
   altitude   Float?
 
+  imageUrls String[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -442,7 +415,8 @@ model NearbyPlace {
 
   name        String
   description String?
-  location    String?
+  locationId  String?
+  location    Location? @relation(fields: [locationId], references: [id])
   latitude    Float?
   longitude   Float?
   imageUrl    String?
