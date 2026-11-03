@@ -230,6 +230,27 @@ model UserBadge {
   @@unique([userId, badgeId])
 }
 
+model Location {
+  id   String       @id @map("_id")
+  name String
+  type LocationType
+
+  sourceCode    String
+  localBodyType String?
+
+  parentId String?
+
+  parent Location? @relation("LocationHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  children Location[] @relation("LocationHierarchy")
+
+  masterTreks  MasterTrek[]
+  nearbyPlaces NearbyPlace[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model MasterTrek {
   id String @id @map("_id")
 
@@ -245,11 +266,10 @@ model MasterTrek {
   distanceKm     Float?
   distinctRoutes Int        @default(1)
 
-  baseLocation String
-  state        String
-  country      String @default("India")
-  latitude     Float?
-  longitude    Float?
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+  latitude   Float?
+  longitude  Float?
 
   bestSeason       String?
   beginnerFriendly Boolean @default(false)
@@ -357,7 +377,8 @@ model NearbyPlace {
 
   name        String
   description String?
-  location    String?
+  locationId  String?
+  location    Location? @relation(fields: [locationId], references: [id])
   latitude    Float?
   longitude   Float?
   imageUrl    String?
