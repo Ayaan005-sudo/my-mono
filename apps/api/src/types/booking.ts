@@ -1,0 +1,236 @@
+import type { CreateBookingSchema, UpdateBookingContactInfoSchema } from "../validators/booking.validator.js";
+import type { z } from "zod";
+
+
+export type CreateBookingInput =
+  z.infer<typeof CreateBookingSchema>;
+
+  export type CreateBookingResponse = {
+  id: string;
+  scheduleId: string;
+
+  adultCount: number;
+  childCount: number;
+
+  subtotal: number;
+  discountAmount: number;
+  bookingFee: number;
+  totalAmount: number;
+
+  currency: string;
+  balanceDueDate: Date | null;
+
+  status: string;
+  bookedAt: Date;
+};
+
+export type CreateBookingRepoInput = {
+  userId: string;
+  input: CreateBookingInput;
+  subtotal: number;
+  discountAmount: number;
+  bookingFee: number;
+  totalAmount: number;
+  currency: string;
+  balanceDueDate: Date | null;
+};
+
+export type GetBookingDetailResponse = {
+  id: string;
+  status: string;
+
+  personalInfo: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    country: string | null;
+    pinCode: string | null;
+    message: string | null;
+  };
+
+  orderSummary: {
+    packageId: string;
+    packageTitle: string | null;
+
+    trekLeader: {
+      id: string;
+      name: string | null;
+      avatarUrl: string | null;
+    };
+
+    scheduleId: string;
+    startDate: Date;
+    endDate: Date;
+
+    adultCount: number;
+    childCount: number;
+
+    subtotal: number;
+    discountAmount: number;
+    bookingFee: number;
+    totalAmount: number;
+    currency: string;
+
+    cancellationPolicy: string | null;
+  };
+};
+
+
+export type UpdateBookingContactInfoInput =
+  z.infer<typeof UpdateBookingContactInfoSchema>;
+
+
+  export type UpdateBookingContactInfoResponse = {
+  id: string;
+
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  pinCode: string | null;
+
+  message: string | null;
+
+  status: string;
+
+  updatedAt: Date;
+};
+
+
+export type GetBookingPaymentOptionsResponse = {
+  bookingId: string;
+
+  totalAmount: number;
+  currency: string;
+
+  paymentOptions: {
+    full: {
+      available: true;
+      amount: number;
+    };
+
+    deposit: {
+      available: boolean;
+      amount: number | null;
+      remainingAmount: number | null;
+      balanceDueDate: Date | null;
+    };
+  };
+};
+
+export type BookingPaymentDisplayStatus =
+  | "UNPAID"
+  | "PARTIALLY_PAID"
+  | "PAID";
+
+export type BookingSummary = {
+  bookingId: string;
+
+  bookingStatus:
+    | "PENDING"
+    | "CONFIRMED"
+    | "CANCELLED"
+    | "COMPLETED";
+
+  bookedAt: Date;
+
+  personalInfo: {
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    country: string | null;
+    pinCode: string | null;
+
+    message: string | null;
+  };
+
+  orderSummary: {
+    packageId: string;
+    packageTitle: string;
+
+    trekLeader: {
+      id: string;
+      name: string;
+      avatarUrl: string | null;
+    };
+
+    scheduleId: string;
+    startDate: Date;
+    endDate: Date;
+
+    adultCount: number;
+    childCount: number;
+
+    cancellationPolicy: string | null;
+  };
+
+  priceSummary: {
+    subtotal: number;
+    discountAmount: number;
+    bookingFee: number;
+    totalAmount: number;
+    currency: string;
+  };
+
+  paymentSummary: {
+    paymentStatus: BookingPaymentDisplayStatus;
+    paymentType: "FULL" | "DEPOSIT" | "BALANCE" | null;
+    amountPaid: number;
+    remainingAmount: number;
+    balanceDueDate: Date | null;
+    paymentGateway: string | null;
+    paidAt: Date | null;
+  };
+};
+
+export type RazorpayWebhookPaymentEntity = {
+  id: string;
+  order_id: string | null;
+  amount: number;
+  currency: string;
+  status: string;
+};
+
+export type RazorpayWebhookPayload = {
+  event: string;
+
+  payload: {
+    payment?: {
+      entity: RazorpayWebhookPaymentEntity;
+    };
+  };
+};
+
+export type CreateBalanceOrderResponse = {
+  paymentId: string;
+  bookingId: string;
+
+  razorpayOrderId: string;
+
+  amount: number;
+  amountInPaise: number;
+
+  currency: string;
+
+  paymentType: "BALANCE";
+
+  totalAmount: number;
+  amountPaid: number;
+  remainingAmount: number;
+
+  balanceDueDate: Date | null;
+};
