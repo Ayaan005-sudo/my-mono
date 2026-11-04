@@ -285,6 +285,31 @@ model Location {
   updatedAt DateTime @updatedAt
 }
 
+model Review {
+  id String @id @map("_id")
+
+  userId    String
+  packageId String
+  bookingId String @unique
+
+  rating            Int
+  guideExpertise    Int
+  safetyProtocols   Int
+  logisticsAndCare  Int
+  sustainableImpact Int
+
+  title     String?
+  comment   String?
+  imageUrls String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id])
+  package Package        @relation(fields: [packageId], references: [id])
+  booking PackageBooking @relation(fields: [bookingId], references: [id])
+}
+
 model MasterTrek {
   id String @id @map("_id")
 
@@ -496,6 +521,7 @@ model Package {
   team          Team?                 @relation(fields: [teamId], references: [id])
 
   location Location? @relation(fields: [locationId], references: [id])
+  reviews  Review[]
 }
 
 model PackageItineraryDay {
@@ -594,6 +620,7 @@ model PackageBooking {
   bookedAt           DateTime  @default(now())
   cancelledAt        DateTime?
   cancellationReason String?
+  review             Review?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
